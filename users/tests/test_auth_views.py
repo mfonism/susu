@@ -62,7 +62,7 @@ class RetrieveAuthenticatedUserTest(APITestCase):
     Test `GET`ing the authenticated user.
     '''
     def setUp(self):
-        self.mfon = User.objects.create(
+        self.mfon = User.objects.create_user(
             email='mfon@etimfon.com', password='notstrong'
         )
         self.url = 'http://127.0.0.1:8000/auth/users/me/'
@@ -91,7 +91,7 @@ class UpdateAuthenticatedUserTest(APITestCase):
     def test_email_field_does_not_get_updated(self):
         old_email = 'mfon@etimfon.com'
         new_email = 'mfon@esusuconfam.com'
-        mfon = User.objects.create(email=old_email, password='nopassword')
+        mfon = User.objects.create_user(email=old_email, password='nopassword')
 
         self.client.force_authenticate(user=mfon)
         response = self.client.put(
@@ -104,7 +104,7 @@ class UpdateAuthenticatedUserTest(APITestCase):
         self.assertCountEqual(response.data, {'id': mfon.pk, 'email': old_email})
 
     def test_cannot_update_unathenticated_user(self):
-        mfon = User.objects.create(email='mfon@etimfon.com', password='nopassword')
+        mfon = User.objects.create_user(email='mfon@etimfon.com', password='nopassword')
 
         # forced authentication line absent
         response = self.client.put(
@@ -120,3 +120,4 @@ class UpdateAuthenticatedUserTest(APITestCase):
     def test_cannot_update_missing_required_field(self):
         '''Should complain with HTTP_400_BAD_REQUEST.'''
         pass
+        
