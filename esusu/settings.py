@@ -143,6 +143,10 @@ REST_FRAMEWORK = {
         )
 }
 
+DJOSER = {
+    'TOKEN_MODEL': None, # because we're using JWT, a stateless token (no model)
+}
+
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('JWT',),
 }
