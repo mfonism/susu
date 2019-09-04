@@ -1,63 +1,94 @@
-from django.test import TestCase
+from django.db import connection
+from django.db.models.base import ModelBase
+from django.test import TestCase, TransactionTestCase
 
-from .models import AbstractShrewdModel, ShrewdModel
+from .models import AbstractShrewdModel, AbstractShrewdModelMixin
 
 
-class AbstractShrewdModelTest(TestCase):
+class AbstractionTest(TestCase):
 
     def test_abstract_shrewd_model_is_abstract(self):
         with self.assertRaises(AttributeError) as e:
             AbstractShrewdModel.objects.create()
         expected_error_msg = 'Manager isn\'t available; AbstractShrewdModel is abstract'
         self.assertEqual(e.exception.args[0], expected_error_msg)
+
+    def test_abstract_shrewd_model_mixin_is_abstract(self):
+        with self.assertRaises(AttributeError) as e:
+            AbstractShrewdModelMixin.objects.create()
+        expected_error_msg = 'Manager isn\'t available; AbstractShrewdModelMixin is abstract'
+        self.assertEqual(e.exception.args[0], expected_error_msg)        
         
 
-class ShrewdModelTest(TestCase):
+class NonAbstractionTest(TransactionTestCase):
+
+    mixin = AbstractShrewdModelMixin
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model_cls = ModelBase(
+            f'__TestModel__{cls.mixin.__name__}',
+            (cls.mixin,),
+            {'__module__': cls.mixin.__module__}
+        )
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        pass
 
     def setUp(self):
-        self.shmo1 = ShrewdModel.objects.create()
-        self.shmo2 = ShrewdModel.objects.create()
-        self.shmo3 = ShrewdModel.objects.create()
-        self.shmo4 = ShrewdModel.objects.create()
-        self.shmo5 = ShrewdModel.objects.create()
-        self.shmo6 = ShrewdModel.objects.create()
-        self.shmo7 = ShrewdModel.objects.create()
+        with connection.schema_editor() as schema_editor:
+            schema_editor.create_model(self.model_cls)
+
+        self.shmo1 = self.model_cls.objects.create()
+        self.shmo2 = self.model_cls.objects.create()
+        self.shmo3 = self.model_cls.objects.create()
+        self.shmo4 = self.model_cls.objects.create()
+        self.shmo5 = self.model_cls.objects.create()
+        self.shmo6 = self.model_cls.objects.create()
+        self.shmo7 = self.model_cls.objects.create()
+
+    def tearDown(self):
+        with connection.schema_editor() as schema_editor:
+            schema_editor.delete_model(self.model_cls)
 
     def test_delete_is_soft_by_default(self):
         pk4 = self.shmo4.pk
         self.shmo4.delete()
 
-        self.assertFalse(ShrewdModel.objects.filter(pk=pk4).exists())
-        self.assertTrue(ShrewdModel.all_objects.filter(pk=pk4).exists())
+        self.assertFalse(self.model_cls.objects.filter(pk=pk4).exists())
+        self.assertTrue(self.model_cls.all_objects.filter(pk=pk4).exists())
 
     def test_undelete(self):
         pk4 = self.shmo4.pk
         self.shmo4.delete()
         self.shmo4.undelete()
         
-        self.assertTrue(ShrewdModel.objects.filter(pk=pk4).exists())
-        self.assertTrue(ShrewdModel.all_objects.filter(pk=pk4).exists())
+        self.assertTrue(self.model_cls.objects.filter(pk=pk4).exists())
+        self.assertTrue(self.model_cls.all_objects.filter(pk=pk4).exists())
 
     def test_bulk_delete_is_soft_by_default(self):
-        ShrewdModel.objects.filter(pk__lt=4).delete()
+        self.model_cls.objects.filter(pk__lt=4).delete()
 
-        self.assertFalse(ShrewdModel.objects.filter(pk__lt=4).exists())
-        self.assertTrue(ShrewdModel.all_objects.filter(pk__lt=4).exists())
+        self.assertFalse(self.model_cls.objects.filter(pk__lt=4).exists())
+        self.assertTrue(self.model_cls.all_objects.filter(pk__lt=4).exists())
 
     def test_bulk_undelete(self):
         # undelete on `all_objects`, as they no longer exist on `objects`
-        ShrewdModel.objects.filter(pk__lt=4).delete()
-        ShrewdModel.all_objects.filter(pk__lt=4).undelete()
+        self.model_cls.objects.filter(pk__lt=4).delete()
+        self.model_cls.all_objects.filter(pk__lt=4).undelete()
         
-        self.assertTrue(ShrewdModel.objects.filter(pk__lt=4).exists())
-        self.assertTrue(ShrewdModel.all_objects.filter(pk__lt=4).exists())
+        self.assertTrue(self.model_cls.objects.filter(pk__lt=4).exists())
+        self.assertTrue(self.model_cls.all_objects.filter(pk__lt=4).exists())
 
     def test_hard_delete(self):
         pk4 = self.shmo4.pk
         self.shmo4.delete(hard=True)
 
-        self.assertFalse(ShrewdModel.objects.filter(pk=pk4).exists())
-        self.assertFalse(ShrewdModel.all_objects.filter(pk=pk4).exists())
+        self.assertFalse(self.model_cls.objects.filter(pk=pk4).exists())
+        self.assertFalse(self.model_cls.all_objects.filter(pk=pk4).exists())
 
     def test_cannot_exactly_undelete_hard_delete(self):
         pk4 = self.shmo4.pk
@@ -65,25 +96,25 @@ class ShrewdModelTest(TestCase):
         self.shmo4.delete(hard=True)
         self.shmo4.undelete()
 
-        self.assertFalse(ShrewdModel.objects.filter(pk=pk4).exists())
-        self.assertFalse(ShrewdModel.all_objects.filter(pk=pk4).exists())
+        self.assertFalse(self.model_cls.objects.filter(pk=pk4).exists())
+        self.assertFalse(self.model_cls.all_objects.filter(pk=pk4).exists())
         # however, new and equal object has been added!
         # so be careful about undeleting already hard deleted single objects
-        self.assertEqual(ShrewdModel.objects.count(), 7)
+        self.assertEqual(self.model_cls.objects.count(), 7)
 
     def test_bulk_hard_delete(self):
-        ShrewdModel.objects.filter(pk__lt=4).delete(hard=True)
+        self.model_cls.objects.filter(pk__lt=4).delete(hard=True)
 
-        self.assertFalse(ShrewdModel.objects.filter(pk__lt=4).exists())
-        self.assertFalse(ShrewdModel.all_objects.filter(pk__lt=4).exists())
+        self.assertFalse(self.model_cls.objects.filter(pk__lt=4).exists())
+        self.assertFalse(self.model_cls.all_objects.filter(pk__lt=4).exists())
 
     def test_cannot_by_any_means_undelete_bulk_hard_delete(self):
         # because you've already consumed the queryset, and
         # the objects no longer exist on either `objects` or `all_objects`
-        ShrewdModel.objects.filter(pk__lt=4).delete(hard=True)
-        ShrewdModel.objects.filter(pk__lt=4).undelete()
+        self.model_cls.objects.filter(pk__lt=4).delete(hard=True)
+        self.model_cls.objects.filter(pk__lt=4).undelete()
         
-        self.assertFalse(ShrewdModel.objects.filter(pk__lt=4).exists())
-        self.assertFalse(ShrewdModel.all_objects.filter(pk__lt=4).exists())
+        self.assertFalse(self.model_cls.objects.filter(pk__lt=4).exists())
+        self.assertFalse(self.model_cls.all_objects.filter(pk__lt=4).exists())
         # no new objects, however, are added
-        self.assertEqual(ShrewdModel.objects.count(), 4)
+        self.assertEqual(self.model_cls.objects.count(), 4)

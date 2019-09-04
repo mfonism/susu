@@ -4,9 +4,13 @@ from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
 
+from shrewd_models.models import ShrewdModelManagerMixin, AbstractShrewdModelMixin
 
-class UserManager(BaseUserManager):
 
+class UserManager(BaseUserManager, ShrewdModelManagerMixin):
+    '''
+    A shrewd manager for our shrewd user.
+    '''
     def _create_user(self, email, password, **extra_fields):
         '''
         Create and save a user with the given email and password.
@@ -46,9 +50,9 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, AbstractShrewdModelMixin, PermissionsMixin):
     '''
-    A fully featured User model with admin-compliant permissions.
+    A fully featured shrewd User model with admin-compliant permissions.
 
     Email is required. Other fields are optional.
     '''
@@ -57,10 +61,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField('last name', max_length=150)
     is_admin = models.BooleanField('admin status', default=False)
     is_staff = models.BooleanField('staff status', default=False)
-    is_active = models.BooleanField('activation status', default=True)
-    date_joined = models.DateTimeField('date joined', default=timezone.now)
 
-    objects = UserManager()
+    objects = UserManager() # shrewd_mode=True
+    all_objects = UserManager(shrewd_mode=False)
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'
@@ -84,4 +87,4 @@ class User(AbstractBaseUser, PermissionsMixin):
         '''
         Send an email to this user.
         '''
-        send_mail(subject, message, from_email, [self.email], **kwargs)
+        send_mail(subject, message, from_email, [self.email], **kwargs) 

@@ -8,10 +8,9 @@ User = get_user_model()
 
 
 class EsusuGroupTests(TestCase):
-    fixtures = ['users.json']
 
     def setUp(self):
-        self.user = User.objects.first()
+        self.user = User.objects.create(email='mfon@etimfon.com', password='4g8menut!')
         self.eg = EsusuGroup.objects.create(name='Happy Pockets', admin=self.user)
 
     def test_has_hash_id_on_creation(self):

@@ -67,10 +67,6 @@ class AbstractShrewdModel(models.Model):
         self.save()
 
 
-class ShrewdModel(AbstractShrewdModel):
-    pass
-
-
 class ShrewedQuerySet(models.QuerySet):
     '''
     I make shrewd operations possible on bulk objects.
@@ -83,3 +79,21 @@ class ShrewedQuerySet(models.QuerySet):
 
     def undelete(self):
         return super().update(deleted_at=None, activated_at=timezone.now())
+
+
+class ShrewdModelManagerMixin(ShrewdModelManager):
+    pass
+
+
+class AbstractShrewdModelMixin(AbstractShrewdModel):
+    class Meta:
+        abstract = True
+    pass
+
+
+class ShrewdQuerySetMixin(ShrewedQuerySet):
+    pass
+
+
+class TestAbstractShrewdModelMixin(AbstractShrewdModel):
+    pass
