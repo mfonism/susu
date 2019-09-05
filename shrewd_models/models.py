@@ -93,7 +93,3 @@ class AbstractShrewdModelMixin(AbstractShrewdModel):
 
 class ShrewdQuerySetMixin(ShrewedQuerySet):
     pass
-
-
-class TestAbstractShrewdModelMixin(AbstractShrewdModel):
-    pass

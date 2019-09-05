@@ -9,11 +9,11 @@ from .models import (
 @admin.register(EsusuGroup)
 class EsusuGroupAdmin(admin.ModelAdmin):
     empty_value_display = ''
-    fields = (('name', 'get_hash_id'), ('admin', 'created_on'))
-    list_display = ('get_hash_id', 'name', 'admin', 'created_on')
+    fields = (('name', 'get_hash_id'), ('admin', 'created_at'))
+    list_display = ('get_hash_id', 'name', 'admin', 'created_at')
     list_display_links = ('get_hash_id',)
-    readonly_fields = ('get_hash_id', 'created_on')
-    ordering = ('-created_on', 'name')
+    readonly_fields = ('get_hash_id', 'created_at')
+    ordering = ('-created_at', 'name')
     search_fields = ('name', 'admin')
     sortable_by = ('name', 'admin')
 
