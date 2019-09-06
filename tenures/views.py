@@ -1,3 +1,9 @@
-from django.shortcuts import render
+from rest_framework import viewsets
 
-# Create your views here.
+from .models import EsusuGroup
+from .serializers import EsusuGroupSerializer
+
+
+class EsusuGroupViewSet(viewsets.ModelViewSet):
+    queryset = EsusuGroup.objects.all()
+    serializer_class = EsusuGroupSerializer

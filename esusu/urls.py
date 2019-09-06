@@ -18,6 +18,13 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+]
+
+urlpatterns += [
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
+]
+
+urlpatterns += [
+    path('api/', include('tenures.urls')),
 ]
