@@ -12,3 +12,4 @@ def assign_hash_id(sender, instance, created, **kwargs):
     if not created:
         return
     instance.hash_id = EsusuGroup.get_hash_id(instance.pk)
+    instance.save()
