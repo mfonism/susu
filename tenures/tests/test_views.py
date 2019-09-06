@@ -106,3 +106,40 @@ class EsusuGroupCreateApiTest(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class EsusuGroupDetailApiTest(APITestCase):
+
+    def setUp(self):
+        self.user1 = get_user_model().objects.create(
+            email='itoro@etimfon.com', password='nopassword'
+        )
+        self.group1 = EsusuGroup.objects.create(
+            name='Aity\'s Group', admin=self.user1
+        )
+
+        self.user2 = get_user_model().objects.create(
+            email='mfon@etimfon.com', password='4g8menut!'
+        )
+        self.group2 = EsusuGroup.objects.create(
+            name='Mfonism\'s Group', admin=self.user2
+        )
+
+    def test_retrieve_group(self):
+        self.client.force_authenticate(user=self.user1)
+        url = reverse('esusugroup-detail', kwargs={'pk': self.group2.pk})
+        response = self.client.get(url)
+
+        serializer = EsusuGroupSerializer(
+            EsusuGroup.objects.get(pk=self.group2.pk),
+            context={'request': APIRequestFactory().get(url)}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_unauthenticated_user_cannot_retrieve_group(self):
+        url = reverse('esusugroup-detail', kwargs={'pk': self.group2.pk})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
