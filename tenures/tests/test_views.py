@@ -143,3 +143,64 @@ class EsusuGroupDetailApiTest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class EsusuGroupUpdateApiTest(APITestCase):
+
+    def setUp(self):
+        self.user = get_user_model().objects.create(
+            email='mfon@etimfon', password='4g8menut!'
+        )
+        self.group = EsusuGroup.objects.create(
+            name='Lifelong Savers', admin=self.user
+        )
+
+    def test_update_group(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
+
+        data = self.client.get(url).data
+        serializer = EsusuGroupSerializer(
+            self.group,
+            context={'request': APIRequestFactory().get(url)}
+        )
+        self.assertEqual(data, serializer.data)
+
+        new_name = 'Lifelong Savers in Nigeria'
+        data['name'] = new_name
+        response = self.client.put(
+            url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+
+        self.group.refresh_from_db()
+        self.assertEqual(self.group.name, new_name)
+
+        serializer = EsusuGroupSerializer(
+            self.group,
+            context={'request': APIRequestFactory().get(url)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_cannot_update_group_with_invalid_data(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
+        response = self.client.put(
+            url,
+            data=json.dumps({'foo':'bar'}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unauthenticated_user_cannot_update_group(self):
+        url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
+        response = self.client.put(
+            url,
+            data=json.dumps({'foo':'bar'}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
