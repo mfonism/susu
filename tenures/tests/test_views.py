@@ -204,3 +204,68 @@ class EsusuGroupUpdateApiTest(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_can_only_update_own_group(self):
+        # a user cannot update a group whose admin they are not
+        ambrose = get_user_model().objects.create_user(
+            email='ambrose@igibo.com', password='nopassword'
+        )
+        group_of_life = EsusuGroup.objects.create(
+            name='The Group of Life', admin=ambrose
+        )
+
+        self.client.force_authenticate(user=self.user)
+        url = reverse('esusugroup-detail', kwargs={'pk':group_of_life.pk})
+        response = self.client.put(
+            url,
+            data=json.dumps({'name': 'Change!'}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class EsusuGroupDeleteApiTest(APITestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create(
+            email='mfon@etimfon.com', password='4g8m4nut!'
+        )
+        self.group = EsusuGroup.objects.create(
+            name='Lifelong Savers', admin=self.user
+        )
+
+    def test_delete_group(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_is_soft(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
+        response = self.client.delete(url)
+
+        self.assertFalse(EsusuGroup.objects.filter(pk=self.group.pk).exists())
+        self.assertTrue(EsusuGroup.all_objects.filter(pk=self.group.pk).exists())
+
+    def test_can_only_delete_own_group(self):
+        # a user cannot delete a group whose admin they are not
+        ambrose = get_user_model().objects.create_user(
+            email='ambrose@igibo.com', password='nopassword'
+        )
+        group_of_life = EsusuGroup.objects.create(
+            name='The Group of Life', admin=ambrose
+        )
+
+        self.client.force_authenticate(user=self.user)
+        url = reverse('esusugroup-detail', kwargs={'pk':group_of_life.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_cannot_delete_group(self):
+        url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
