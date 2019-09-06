@@ -34,7 +34,7 @@ class CreateUserTest(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertCountEqual(response.data, {'id': 1, 'email': 'mfon'})
+        self.assertDictEqual(response.data, {'id': 1, 'email': 'mfon@etimfon.com'})
 
         self.assertEqual(User.objects.count(), 1)
 
@@ -83,7 +83,7 @@ class RetrieveAuthenticatedUserTest(APITestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertCountEqual(response.data, {'id': self.mfon.pk, 'email': self.mfon.email})
+        self.assertDictEqual(response.data, {'id': self.mfon.pk, 'email': self.mfon.email})
 
     def test_retrieve_user__unathenticated(self):
         # unauthenticated users are not authorised to get
@@ -120,7 +120,7 @@ class UpdateAuthenticatedUserTest(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertCountEqual(response.data, {'id': mfon.pk, 'email': old_email})
+        self.assertDictEqual(response.data, {'id': mfon.pk, 'email': old_email})
 
     def test_update__unathenticated_user(self):
         # unathenticated user is not authorized to update
