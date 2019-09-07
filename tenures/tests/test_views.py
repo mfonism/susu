@@ -14,7 +14,7 @@ from ..serializers import EsusuGroupSerializer
 class EsusuGroupListApiTest(APITestCase):
 
     def setUp(self):
-        self.user = get_user_model().objects.create(
+        self.user = get_user_model().objects.create_user(
             email='mfon@etimfon.com', password='4g8menut!'
         )
         EsusuGroup.objects.create(name='First Group', admin=self.user)
@@ -22,7 +22,8 @@ class EsusuGroupListApiTest(APITestCase):
         EsusuGroup.objects.create(name='Third Group', admin=self.user)
         EsusuGroup.objects.create(name='Fourth Group', admin=self.user)
 
-    def test_list_group(self):        
+    def test_list_group(self):
+        # authenticated user can retrieve list of groups
         self.client.force_authenticate(user=self.user)
         url = reverse('esusugroup-list')
         response = self.client.get(url)
@@ -36,7 +37,6 @@ class EsusuGroupListApiTest(APITestCase):
             context={'request': APIRequestFactory().get(url)}
         )
 
-        self.assertTrue(EsusuGroup.objects.all().exists())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
 
@@ -57,10 +57,7 @@ class EsusuGroupListApiTest(APITestCase):
 class EsusuGroupCreateApiTest(APITestCase):
 
     def setUp(self):
-        get_user_model().objects.create(
-            email='itoro@etimfon.com', password='nopassword'
-        )
-        self.user = get_user_model().objects.create(
+        self.user = get_user_model().objects.create_user(
             email='mfon@etimfon.com', password='4g8menut!'
         )
         self.valid_payload = {
@@ -68,6 +65,8 @@ class EsusuGroupCreateApiTest(APITestCase):
         }
 
     def test_create_group(self):
+        # authenticated user can create group
+        # ...automatically becomes group admin, too
         self.client.force_authenticate(user=self.user)
         url = reverse('esusugroup-list')
         response = self.client.post(
@@ -76,15 +75,16 @@ class EsusuGroupCreateApiTest(APITestCase):
             content_type='application/json'
         )
 
-        esusugroup = EsusuGroup.objects.get(pk=1)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        esusugroup = EsusuGroup.objects.get(pk=response.data['pk'])
         serializer = EsusuGroupSerializer(
             esusugroup,
             context={'request': APIRequestFactory().get(url)}
         )
 
-        self.assertEqual(esusugroup.admin.pk, self.user.pk)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data, serializer.data)
+        self.assertEqual(esusugroup.admin.pk, self.user.pk)
 
     def test_cannot_create_group_with_invalid_payload(self):
         self.client.force_authenticate(user=self.user)
@@ -111,27 +111,38 @@ class EsusuGroupCreateApiTest(APITestCase):
 class EsusuGroupDetailApiTest(APITestCase):
 
     def setUp(self):
-        self.user1 = get_user_model().objects.create(
-            email='itoro@etimfon.com', password='nopassword'
-        )
-        self.group1 = EsusuGroup.objects.create(
-            name='Aity\'s Group', admin=self.user1
-        )
-
-        self.user2 = get_user_model().objects.create(
+        self.user = get_user_model().objects.create_user(
             email='mfon@etimfon.com', password='4g8menut!'
         )
-        self.group2 = EsusuGroup.objects.create(
-            name='Mfonism\'s Group', admin=self.user2
+        self.group = EsusuGroup.objects.create(
+            name='Mfonism\'s Group', admin=self.user
         )
 
     def test_retrieve_group(self):
-        self.client.force_authenticate(user=self.user1)
-        url = reverse('esusugroup-detail', kwargs={'pk': self.group2.pk})
+        # authenticated user can retrieve own group
+        self.client.force_authenticate(user=self.user)
+        url = reverse('esusugroup-detail', kwargs={'pk': self.group.pk})
         response = self.client.get(url)
 
         serializer = EsusuGroupSerializer(
-            EsusuGroup.objects.get(pk=self.group2.pk),
+            EsusuGroup.objects.get(pk=self.group.pk),
+            context={'request': APIRequestFactory().get(url)}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_non_owner_can_retrieve_group(self):
+        # authenticated user can retrieve group owned by some other user
+        ambrose = get_user_model().objects.create_user(
+            'ambrose@igibo.com', 'nopassword'
+            )
+        self.client.force_authenticate(user=ambrose)
+        url = reverse('esusugroup-detail', kwargs={'pk': self.group.pk})
+        response = self.client.get(url)
+
+        serializer = EsusuGroupSerializer(
+            EsusuGroup.objects.get(pk=self.group.pk),
             context={'request': APIRequestFactory().get(url)}
         )
 
@@ -139,7 +150,7 @@ class EsusuGroupDetailApiTest(APITestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_unauthenticated_user_cannot_retrieve_group(self):
-        url = reverse('esusugroup-detail', kwargs={'pk': self.group2.pk})
+        url = reverse('esusugroup-detail', kwargs={'pk': self.group.pk})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -148,7 +159,7 @@ class EsusuGroupDetailApiTest(APITestCase):
 class EsusuGroupUpdateApiTest(APITestCase):
 
     def setUp(self):
-        self.user = get_user_model().objects.create(
+        self.user = get_user_model().objects.create_user(
             email='mfon@etimfon', password='4g8menut!'
         )
         self.group = EsusuGroup.objects.create(
@@ -156,21 +167,14 @@ class EsusuGroupUpdateApiTest(APITestCase):
         )
 
     def test_update_group(self):
+        # authenticated user can update own group
         self.client.force_authenticate(user=self.user)
         url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
 
-        data = self.client.get(url).data
-        serializer = EsusuGroupSerializer(
-            self.group,
-            context={'request': APIRequestFactory().get(url)}
-        )
-        self.assertEqual(data, serializer.data)
-
-        new_name = 'Lifelong Savers in Nigeria'
-        data['name'] = new_name
+        new_name = 'Group Of Analytical Thinkers (G.O.A.T)'
         response = self.client.put(
             url,
-            data=json.dumps(data),
+            data=json.dumps({'name': new_name}),
             content_type='application/json'
         )
 
@@ -227,7 +231,7 @@ class EsusuGroupUpdateApiTest(APITestCase):
 
 class EsusuGroupDeleteApiTest(APITestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create(
+        self.user = get_user_model().objects.create_user(
             email='mfon@etimfon.com', password='4g8m4nut!'
         )
         self.group = EsusuGroup.objects.create(
@@ -235,6 +239,7 @@ class EsusuGroupDeleteApiTest(APITestCase):
         )
 
     def test_delete_group(self):
+        # authenticated user can delete own group
         self.client.force_authenticate(user=self.user)
         url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
         response = self.client.delete(url)
@@ -242,6 +247,7 @@ class EsusuGroupDeleteApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_is_soft(self):
+        # delete merely sets a flag on the object
         self.client.force_authenticate(user=self.user)
         url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
         response = self.client.delete(url)
@@ -250,7 +256,7 @@ class EsusuGroupDeleteApiTest(APITestCase):
         self.assertTrue(EsusuGroup.all_objects.filter(pk=self.group.pk).exists())
 
     def test_can_only_delete_own_group(self):
-        # a user cannot delete a group whose admin they are not
+        # authenticated user can only delete own group
         ambrose = get_user_model().objects.create_user(
             email='ambrose@igibo.com', password='nopassword'
         )
