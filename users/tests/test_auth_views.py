@@ -24,7 +24,7 @@ class CreateUserTest(APITestCase):
             'password': 'notasecret, though!',
         }
         # self.url = 'http://127.0.0.1:8000/auth/users/'
-        self.url = reverse('auth-users-list')
+        self.url = reverse('auth-user-list')
 
     def test_create_user(self):
         # create user with email and password
@@ -78,7 +78,7 @@ class RetrieveAuthenticatedUserTest(APITestCase):
             email='mfon@etimfon.com', password='notstrong'
         )
         # self.url = 'http://127.0.0.1:8000/auth/users/me/'
-        self.url = reverse('auth-users-me')
+        self.url = reverse('auth-user-me')
 
     def test_retrieve_user(self):
         # authenticated users can get
@@ -105,7 +105,7 @@ class UpdateAuthenticatedUserTest(APITestCase):
     '''
     def setUp(self):
         # self.url = 'http://127.0.0.1:8000/auth/users/me/'
-        self.url = reverse('auth-users-me')
+        self.url = reverse('auth-user-me')
 
     def test_email_field_does_not_get_updated(self):
         # email fields cannot be updated via this view
@@ -162,7 +162,7 @@ class DeleteAuthenticatedUserTest(APITestCase):
                     email='mfon@etimfon.com', password='4g8menut'
                 )
         # self.url = 'http://127.0.0.1:8000/auth/users/me/'
-        self.url = reverse('auth-users-me')
+        self.url = reverse('auth-user-me')
 
     def test_delete__authenticated_user(self):
         # authentiated user can delete self with correct current password

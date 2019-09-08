@@ -18,6 +18,6 @@ from djoser.urls import urlpatterns as djoser_urlpatterns
 from djoser.urls.base import router as djoser_router
 
 authuser_router = DefaultRouter()
-authuser_router.register('users', djoser_views.UserViewSet, 'auth-users')
+authuser_router.register('users', djoser_views.UserViewSet, 'auth-user')
 
 urlpatterns = authuser_router.urls
