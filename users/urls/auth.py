@@ -14,8 +14,7 @@ Which then frees up 'user-list' and 'user-detail' for our user app
 from rest_framework.routers import DefaultRouter
 
 from djoser import views as djoser_views
-from djoser.urls import urlpatterns as djoser_urlpatterns
-from djoser.urls.base import router as djoser_router
+
 
 authuser_router = DefaultRouter()
 authuser_router.register('users', djoser_views.UserViewSet, 'auth-user')
