@@ -30,4 +30,5 @@ urlpatterns += [
 
 urlpatterns += [
     path('api/', include('tenures.urls')),
+    path('api/', include('users.urls.nonauth'))
 ]
