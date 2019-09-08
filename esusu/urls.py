@@ -21,7 +21,10 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    path('auth/', include('djoser.urls')),
+    # path('auth/', include('djoser.urls')),
+    # we've modified 'djoser.urls' in our users app
+    # so we include that one instead
+    path('auth/', include('users.urls.auth')),
     path('auth/', include('djoser.urls.jwt')),
 ]
 

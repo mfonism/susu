@@ -1,8 +1,9 @@
 import json
 from unittest import skip
 
-from django.test import override_settings
 from django.contrib.auth import get_user_model
+from django.urls import reverse
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -22,7 +23,8 @@ class CreateUserTest(APITestCase):
             'email': 'mfon@etimfon.com',
             'password': 'notasecret, though!',
         }
-        self.url = 'http://127.0.0.1:8000/auth/users/'
+        # self.url = 'http://127.0.0.1:8000/auth/users/'
+        self.url = reverse('auth-users-list')
 
     def test_create_user(self):
         # create user with email and password
@@ -75,7 +77,8 @@ class RetrieveAuthenticatedUserTest(APITestCase):
         self.mfon = User.objects.create_user(
             email='mfon@etimfon.com', password='notstrong'
         )
-        self.url = 'http://127.0.0.1:8000/auth/users/me/'
+        # self.url = 'http://127.0.0.1:8000/auth/users/me/'
+        self.url = reverse('auth-users-me')
 
     def test_retrieve_user(self):
         # authenticated users can get
@@ -101,7 +104,8 @@ class UpdateAuthenticatedUserTest(APITestCase):
     + Only authenticated users can update
     '''
     def setUp(self):
-        self.url = 'http://127.0.0.1:8000/auth/users/me/'
+        # self.url = 'http://127.0.0.1:8000/auth/users/me/'
+        self.url = reverse('auth-users-me')
 
     def test_email_field_does_not_get_updated(self):
         # email fields cannot be updated via this view
@@ -157,7 +161,8 @@ class DeleteAuthenticatedUserTest(APITestCase):
         self.mfon = User.objects.create_user(
                     email='mfon@etimfon.com', password='4g8menut'
                 )
-        self.url = 'http://127.0.0.1:8000/auth/users/me/'
+        # self.url = 'http://127.0.0.1:8000/auth/users/me/'
+        self.url = reverse('auth-users-me')
 
     def test_delete__authenticated_user(self):
         # authentiated user can delete self with correct current password
