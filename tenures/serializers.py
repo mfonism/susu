@@ -1,8 +1,8 @@
-from django.db.models import Value, QuerySet
-from django.db.models.functions import Concat
+# from django.db.models import Value, QuerySet
+# from django.db.models.functions import Concat
 from rest_framework import serializers
 
-from .models import EsusuGroup
+from .models import EsusuGroup, FutureTenure
 
 
 class EsusuGroupSerializer(serializers.HyperlinkedModelSerializer):
@@ -19,7 +19,7 @@ class EsusuGroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = EsusuGroup
         fields = [
-            'url', 'pk', 'name', 'hash_id', 'admin_name', 'admin_url',
+            'url', 'name', 'hash_id', 'admin_name', 'admin_url',
         ]
 
     # def __new__(cls, *args, **kwargs):
@@ -41,3 +41,22 @@ class EsusuGroupSerializer(serializers.HyperlinkedModelSerializer):
     #             'admin__last_name'
     #         )
     #     )
+
+
+class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
+
+    group = EsusuGroupSerializer(
+        source='esusu_group',
+        read_only=True
+    )
+    join_link = serializers.CharField(
+        # for now, let it just be the hash_id
+        source='esusu_group.hash_id',
+        read_only=True
+    )
+
+    class Meta:
+        model = FutureTenure
+        fields = [
+            'amount', 'group', 'will_go_live_at', 'join_link',
+        ]

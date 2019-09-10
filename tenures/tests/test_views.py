@@ -1,14 +1,14 @@
 import json
 
-from django.urls import reverse, resolve
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework.exceptions import ErrorDetail
+from rest_framework.reverse import reverse
 
 from ..views import EsusuGroupViewSet
-from ..models import EsusuGroup
-from ..serializers import EsusuGroupSerializer
+from ..models import EsusuGroup, FutureTenure
+from ..serializers import EsusuGroupSerializer, FutureTenureSerializer
 
 
 class EsusuGroupListApiTest(APITestCase):
@@ -79,7 +79,7 @@ class EsusuGroupCreateApiTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        esusugroup = EsusuGroup.objects.get(pk=response.data['pk'])
+        esusugroup = EsusuGroup.objects.get(pk=1)
         serializer = EsusuGroupSerializer(
             esusugroup,
             context={'request': APIRequestFactory().get(url)}
@@ -236,6 +236,7 @@ class EsusuGroupUpdateApiTest(APITestCase):
 
 
 class EsusuGroupDeleteApiTest(APITestCase):
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             email='mfon@etimfon.com', password='4g8m4nut!',
@@ -281,5 +282,74 @@ class EsusuGroupDeleteApiTest(APITestCase):
     def test_unauthenticated_user_cannot_delete_group(self):
         url = reverse('esusugroup-detail', kwargs={'pk':self.group.pk})
         response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class FutureTenureAPITest(APITestCase):
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
+        )
+        self.group = EsusuGroup.objects.create(name='Livelong Savers', admin=self.user)
+
+        self.url = reverse('esusugroup-future-tenure', kwargs={'pk':self.group.pk})
+        self.valid_payload = {
+            'amount': 10000,
+        }
+
+    def test_create_ft(self):
+        # authenticated user can create future tenure
+        # in a group they own
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
+
+        serializer = FutureTenureSerializer(
+            FutureTenure.objects.get(pk=1),
+            context={'request':APIRequestFactory().get(self.url)}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_cannot_create_ft_with_invalid_data(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            self.url,
+            data=json.dumps({}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_can_only_create_ft_in_own_group(self):
+        # authenticated user cannot create
+        # future tenure in someone else's group
+        ambrose = get_user_model().objects.create_user(
+            email='ambrose@igibo.com', password='nopassword',
+            first_name='Ambrose', last_name='Igibo'
+        )
+        self.client.force_authenticate(ambrose)
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_cannot_create_ft(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
