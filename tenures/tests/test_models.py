@@ -10,8 +10,13 @@ User = get_user_model()
 class EsusuGroupTests(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create(email='mfon@etimfon.com', password='4g8menut!')
-        self.eg = EsusuGroup.objects.create(name='Happy Pockets', admin=self.user)
+        self.user = User.objects.create(
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
+        )
+        self.eg = EsusuGroup.objects.create(
+            name='Happy Pockets', admin=self.user
+        )
 
     def test_has_hash_id_on_creation(self):
         '''

@@ -77,14 +77,21 @@ class User(AbstractBaseUser, AbstractShrewdModelMixin, PermissionsMixin):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
 
-    def get_full_name(self):
-        return f'{self.first_name} {self.last_name}'
-
-    def get_short_name(self):
-        return self.first_name
-
     def email_user(self, subject, message, from_email=None, **kwargs):
         '''
         Send an email to this user.
         '''
-        send_mail(subject, message, from_email, [self.email], **kwargs) 
+        send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    def get_first_name(self):
+        return self.first_name or "<no firstname>"
+
+    def get_short_name(self):
+        return self.get_first_name()
+
+    def get_full_name(self):
+        # return f'{self.first_name} {self.last_name}'
+        return f'{self.get_short_name()} {self.last_name or "<no lastname>"}'
+
+    def __str__(self):
+        return self.get_full_name()

@@ -15,7 +15,8 @@ class EsusuGroupListApiTest(APITestCase):
 
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            email='mfon@etimfon.com', password='4g8menut!'
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
         )
         EsusuGroup.objects.create(name='First Group', admin=self.user)
         EsusuGroup.objects.create(name='Second Group', admin=self.user)
@@ -58,7 +59,8 @@ class EsusuGroupCreateApiTest(APITestCase):
 
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            email='mfon@etimfon.com', password='4g8menut!'
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
         )
         self.valid_payload = {
             'name': 'Lifelong Savers',
@@ -112,7 +114,8 @@ class EsusuGroupDetailApiTest(APITestCase):
 
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            email='mfon@etimfon.com', password='4g8menut!'
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
         )
         self.group = EsusuGroup.objects.create(
             name='Mfonism\'s Group', admin=self.user
@@ -135,7 +138,8 @@ class EsusuGroupDetailApiTest(APITestCase):
     def test_non_owner_can_retrieve_group(self):
         # authenticated user can retrieve group owned by some other user
         ambrose = get_user_model().objects.create_user(
-            'ambrose@igibo.com', 'nopassword'
+            'ambrose@igibo.com', 'nopassword',
+            first_name='Ambrose', last_name='Igibo'
             )
         self.client.force_authenticate(user=ambrose)
         url = reverse('esusugroup-detail', kwargs={'pk': self.group.pk})
@@ -160,7 +164,8 @@ class EsusuGroupUpdateApiTest(APITestCase):
 
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            email='mfon@etimfon', password='4g8menut!'
+            email='mfon@etimfon', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
         )
         self.group = EsusuGroup.objects.create(
             name='Lifelong Savers', admin=self.user
@@ -212,7 +217,8 @@ class EsusuGroupUpdateApiTest(APITestCase):
     def test_can_only_update_own_group(self):
         # a user cannot update a group whose admin they are not
         ambrose = get_user_model().objects.create_user(
-            email='ambrose@igibo.com', password='nopassword'
+            email='ambrose@igibo.com', password='nopassword',
+            first_name='Ambrose', last_name='Igibo'
         )
         group_of_life = EsusuGroup.objects.create(
             name='The Group of Life', admin=ambrose
@@ -232,7 +238,8 @@ class EsusuGroupUpdateApiTest(APITestCase):
 class EsusuGroupDeleteApiTest(APITestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            email='mfon@etimfon.com', password='4g8m4nut!'
+            email='mfon@etimfon.com', password='4g8m4nut!',
+            first_name='Mfon', last_name='Eti-mfon'
         )
         self.group = EsusuGroup.objects.create(
             name='Lifelong Savers', admin=self.user
@@ -258,7 +265,8 @@ class EsusuGroupDeleteApiTest(APITestCase):
     def test_can_only_delete_own_group(self):
         # authenticated user can only delete own group
         ambrose = get_user_model().objects.create_user(
-            email='ambrose@igibo.com', password='nopassword'
+            email='ambrose@igibo.com', password='nopassword',
+            first_name='Ambrose', last_name='Igibo'
         )
         group_of_life = EsusuGroup.objects.create(
             name='The Group of Life', admin=ambrose
