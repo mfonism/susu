@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework.exceptions import ErrorDetail
@@ -347,6 +348,97 @@ class FutureTenureCreateAPITest(APITestCase):
 
     def test_unauthenticated_user_cannot_create_ft(self):
         response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class FutureTenureUpdateAPITest(APITestCase):
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
+        )
+        eg = EsusuGroup.objects.create(name='Livelong Savers', admin=self.user)
+        ft = FutureTenure.objects.create(amount=5000, esusu_group=eg)
+
+        self.url = reverse('esusugroup-future-tenure', kwargs={'pk':eg.pk})
+        self.valid_payload = {
+            'amount': 10000,
+            'will_go_live_at': str(timezone.now() + timezone.timedelta(7))
+        }
+
+    def test_update_ft(self):
+        # authenticated user can update future tenure
+        # in a group they own
+        self.client.force_authenticate(self.user)
+        response = self.client.put(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
+
+        serializer = FutureTenureSerializer(
+            FutureTenure.objects.first(),
+            context={'request':APIRequestFactory().get(self.url)}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_can_only_update_ft_in_own_group(self):
+        # authenticated user can only update future tenure
+        # in their own group
+        ambrose = get_user_model().objects.create_user(
+            'ambrose@igibo.com', 'nopassword',
+            first_name='Ambrose', last_name='Igibo'
+        )
+        self.client.force_authenticate(ambrose)
+
+        response = self.client.put(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_cannot_update_ft_with_invalid_data(self):
+        # authenticated user can only update future tenure
+        # with valid data
+        self.client.force_authenticate(self.user)
+        invalid_data = {
+            'will_go_live_at': str(timezone.now() + timezone.timedelta(7))
+        }
+
+        response = self.client.put(
+            self.url,
+            data=json.dumps(invalid_data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cannot_update_non_existent_ft(self):
+        # authenticated user cannot update future tenure
+        # in a group that has no future tenure in the first place
+        self.client.force_authenticate(self.user)
+        eg = EsusuGroup.objects.create(name='Another Group by Mfon', admin=self.user)
+        url = reverse('esusugroup-future-tenure', kwargs={'pk':eg.pk})
+
+        response = self.client.put(
+            url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_nonauthenticated_user_cannot_update_ft(self):
+        response = self.client.put(
             self.url,
             data=json.dumps(self.valid_payload),
             content_type='application/json'

@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-
 from hashids import Hashids
 
 from shrewd_models.models import AbstractShrewdModelMixin
