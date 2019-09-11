@@ -18,7 +18,7 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(admin=self.request.user)
 
-    @action(methods=['post', 'put'], detail=True,
+    @action(methods=['post', 'put', 'delete'], detail=True,
             url_path='future-tenure', url_name='future-tenure')
     def future_tenure(self, request, pk=None):
         '''
@@ -61,6 +61,14 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
 
             serializer.save()
             return Response(serializer.data, status.HTTP_200_OK)
+
+        elif request.method == 'DELETE':
+            # perform a hard delete on the object
+            # so that we don't wrestle with integrity errors
+            # when a new one is created for same group
+            ft = get_object_or_404(FutureTenure, pk=group.hash_id)
+            ft.delete(hard=True)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 class FutureTenureViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FutureTenure.objects.all()

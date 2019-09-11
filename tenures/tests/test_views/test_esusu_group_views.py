@@ -445,3 +445,56 @@ class FutureTenureUpdateAPITest(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class FutureTenureDeleteAPITest(APITestCase):
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
+        )
+        eg = EsusuGroup.objects.create(name='Livelong Savers', admin=self.user)
+        ft = FutureTenure.objects.create(amount=5000, esusu_group=eg)
+
+        self.url = reverse('esusugroup-future-tenure', kwargs={'pk':eg.pk})
+
+    def test_delete_ft(self):
+        # authenticated user can delete future tenure from
+        # their own group
+        self.client.force_authenticate(self.user)
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_ft_is_not_soft(self):
+        eg = EsusuGroup.objects.create(name='To Be Deleted', admin=self.user)
+        ft = FutureTenure.objects.create(amount=10000, esusu_group=eg)
+        self.assertEqual(FutureTenure.objects.count(), 2)
+
+        self.client.force_authenticate(self.user)
+        url = reverse('esusugroup-future-tenure', kwargs={'pk':eg.pk})
+        self.client.delete(self.url)
+
+        self.assertEqual(FutureTenure.objects.count(), 1)
+        self.assertEqual(FutureTenure.all_objects.count(), 1)
+
+    def test_can_only_delete_own_ft(self):
+        # authenticated user cannot delete future tenure from
+        # group not owned by them
+        ambrose = get_user_model().objects.create_user(
+            email='ambrose@igibo.com', password='nopassword',
+            first_name='Ambrose', last_name='Igibo'
+        )
+        eg = EsusuGroup.objects.create(name='To Be Deleted', admin=ambrose)
+        ft = FutureTenure.objects.create(amount=10000, esusu_group=eg)
+
+        self.client.force_authenticate(ambrose)
+        # can ambrose delete mfon's future tenure?
+        response = self.client.delete(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_nonauthenticated_user_cannot_delete_ft(self):
+        response = self.client.delete(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
