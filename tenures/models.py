@@ -82,6 +82,12 @@ def two_weeks_from_now():
 
 
 class FutureTenure(AbstractShrewdModelMixin, models.Model):
+    # the hash_id will be passed from the group to the tenure
+    hash_id = models.CharField(
+        primary_key=True,
+        max_length=64,
+        unique=True
+    )
     amount = models.DecimalField(
         max_digits=9,
         decimal_places=2,
@@ -98,6 +104,9 @@ class FutureTenure(AbstractShrewdModelMixin, models.Model):
 
     class Meta:
         ordering = ['-will_go_live_at', '-created_at']
+
+    def get_hash_id(self):
+        return self.esusu_group.hash_id
 
 
 class LiveSubscription(AbstractShrewdModelMixin, models.Model):

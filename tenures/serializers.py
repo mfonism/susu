@@ -58,5 +58,5 @@ class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = FutureTenure
         fields = [
-            'amount', 'group', 'will_go_live_at', 'join_link',
+            'url', 'amount', 'group', 'will_go_live_at', 'join_link',
         ]

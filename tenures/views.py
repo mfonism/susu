@@ -1,4 +1,4 @@
-from rest_framework import permissions, status, viewsets
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -22,7 +22,7 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(admin=self.request.user)
 
-    @action(methods=['get', 'post'], detail=True,
+    @action(methods=['post'], detail=True,
             url_path='future-tenure', url_name='future-tenure')
     def future_tenure(self, request, pk=None):
         group = self.get_object()
@@ -35,3 +35,11 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
             serializer.save(esusu_group=group)
             return Response(serializer.data, status.HTTP_200_OK)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+
+class FutureTenureViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = FutureTenure.objects.all()
+    serializer_class = FutureTenureSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(hash_id=serializer.data['admin']['hash_id'])

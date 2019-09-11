@@ -6,9 +6,9 @@ from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.reverse import reverse
 
-from ..views import EsusuGroupViewSet
-from ..models import EsusuGroup, FutureTenure
-from ..serializers import EsusuGroupSerializer, FutureTenureSerializer
+from ...views import EsusuGroupViewSet
+from ...models import EsusuGroup, FutureTenure
+from ...serializers import EsusuGroupSerializer, FutureTenureSerializer
 
 
 class EsusuGroupListApiTest(APITestCase):
@@ -286,7 +286,7 @@ class EsusuGroupDeleteApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class FutureTenureAPITest(APITestCase):
+class FutureTenureCreateAPITest(APITestCase):
 
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -311,7 +311,7 @@ class FutureTenureAPITest(APITestCase):
         )
 
         serializer = FutureTenureSerializer(
-            FutureTenure.objects.get(pk=1),
+            FutureTenure.objects.first(),
             context={'request':APIRequestFactory().get(self.url)}
         )
 
