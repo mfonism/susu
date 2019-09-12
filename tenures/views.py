@@ -11,7 +11,7 @@ from .serializers import (
     EsusuGroupSerializer,
     FutureTenureSerializer, LiveTenureSerializer, HistoricalTenureSerializer
 )
-from .permissions import IsGroupAdminOrReadOnly
+from .permissions import IsGroupAdminOrReadOnly, IsGroupMember
 
 
 class EsusuGroupViewSet(viewsets.ModelViewSet):
@@ -23,6 +23,7 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(admin=self.request.user)
+
 
     @action(methods=['post', 'put', 'delete'], detail=True,
             url_path='future-tenure', url_name='futuretenure')
@@ -75,6 +76,23 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
             ft = get_object_or_404(FutureTenure, pk=group.hash_id)
             ft.delete(hard=True)
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+    @action(methods=['get'], detail=True,
+            url_path='historical-tenure', url_name='historicaltenure',
+            permission_classes=[permissions.IsAuthenticated, IsGroupMember])
+    def historical_tenure(self, request, pk=None):
+        '''
+        List historical tenures from their respective groups.
+        '''
+        group = self.get_object()
+        serializer = HistoricalTenureSerializer(
+            HistoricalTenure.objects.filter(esusu_group=group),
+            many=True,
+            context={'request': request}
+        )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FutureTenureViewSet(viewsets.ReadOnlyModelViewSet):

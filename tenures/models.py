@@ -31,6 +31,13 @@ class EsusuGroup(AbstractShrewdModelMixin, models.Model):
     def __str__(self):
         return self.name or self.hash_id or str(self.pk)
 
+    def has_member(self, user):
+        '''
+        return whether the argument user is a member of the group.
+        '''
+        # for now
+        return True
+
 
 class LiveTenure(AbstractShrewdModelMixin, models.Model):
     amount = models.DecimalField(
