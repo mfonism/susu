@@ -296,7 +296,7 @@ class FutureTenureCreateAPITest(APITestCase):
         )
         self.group = EsusuGroup.objects.create(name='Livelong Savers', admin=self.user)
 
-        self.url = reverse('esusugroup-future-tenure', kwargs={'pk':self.group.pk})
+        self.url = reverse('esusugroup-futuretenure', kwargs={'pk':self.group.pk})
         self.valid_payload = {
             'amount': 10000,
         }
@@ -366,7 +366,7 @@ class FutureTenureUpdateAPITest(APITestCase):
         eg = EsusuGroup.objects.create(name='Livelong Savers', admin=self.user)
         ft = FutureTenure.objects.create(amount=5000, esusu_group=eg)
 
-        self.url = reverse('esusugroup-future-tenure', kwargs={'pk':eg.pk})
+        self.url = reverse('esusugroup-futuretenure', kwargs={'pk':eg.pk})
         self.valid_payload = {
             'amount': 10000,
             'will_go_live_at': str(timezone.now() + timezone.timedelta(7))
@@ -427,7 +427,7 @@ class FutureTenureUpdateAPITest(APITestCase):
         # in a group that has no future tenure in the first place
         self.client.force_authenticate(self.user)
         eg = EsusuGroup.objects.create(name='Another Group by Mfon', admin=self.user)
-        url = reverse('esusugroup-future-tenure', kwargs={'pk':eg.pk})
+        url = reverse('esusugroup-futuretenure', kwargs={'pk':eg.pk})
 
         response = self.client.put(
             url,
@@ -457,7 +457,7 @@ class FutureTenureDeleteAPITest(APITestCase):
         eg = EsusuGroup.objects.create(name='Livelong Savers', admin=self.user)
         ft = FutureTenure.objects.create(amount=5000, esusu_group=eg)
 
-        self.url = reverse('esusugroup-future-tenure', kwargs={'pk':eg.pk})
+        self.url = reverse('esusugroup-futuretenure', kwargs={'pk':eg.pk})
 
     def test_delete_ft(self):
         # authenticated user can delete future tenure from
@@ -472,7 +472,7 @@ class FutureTenureDeleteAPITest(APITestCase):
         self.assertEqual(FutureTenure.objects.count(), 2)
 
         self.client.force_authenticate(self.user)
-        url = reverse('esusugroup-future-tenure', kwargs={'pk':eg.pk})
+        url = reverse('esusugroup-futuretenure', kwargs={'pk':eg.pk})
         self.client.delete(self.url)
 
         self.assertEqual(FutureTenure.objects.count(), 1)

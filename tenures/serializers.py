@@ -2,7 +2,7 @@
 # from django.db.models.functions import Concat
 from rest_framework import serializers
 
-from .models import EsusuGroup, FutureTenure
+from .models import EsusuGroup, FutureTenure, LiveTenure
 
 
 class EsusuGroupSerializer(serializers.HyperlinkedModelSerializer):
@@ -59,4 +59,18 @@ class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
         model = FutureTenure
         fields = [
             'url', 'amount', 'group', 'will_go_live_at', 'join_link',
+        ]
+
+
+class LiveTenureSerializer(serializers.HyperlinkedModelSerializer):
+
+    group = EsusuGroupSerializer(
+        source='esusu_group',
+        read_only=True
+    )
+
+    class Meta:
+        model = LiveTenure
+        fields = [
+            'url', 'amount', 'group', 'live_at',
         ]

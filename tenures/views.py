@@ -3,8 +3,11 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import EsusuGroup, FutureTenure
-from .serializers import EsusuGroupSerializer, FutureTenureSerializer
+from .models import EsusuGroup, FutureTenure, LiveTenure
+from .serializers import (
+    EsusuGroupSerializer,
+    FutureTenureSerializer, LiveTenureSerializer
+)
 from .permissions import IsGroupAdminOrReadOnly
 
 
@@ -19,7 +22,7 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
         serializer.save(admin=self.request.user)
 
     @action(methods=['post', 'put', 'delete'], detail=True,
-            url_path='future-tenure', url_name='future-tenure')
+            url_path='future-tenure', url_name='futuretenure')
     def future_tenure(self, request, pk=None):
         '''
         Write-actions for future tenures from their respective groups.
@@ -70,6 +73,12 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
             ft.delete(hard=True)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class FutureTenureViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FutureTenure.objects.all()
     serializer_class = FutureTenureSerializer
+
+
+class LiveTenureViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = LiveTenure.objects.all()
+    serializer_class = LiveTenureSerializer
