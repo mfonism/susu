@@ -3,10 +3,13 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import EsusuGroup, FutureTenure, LiveTenure
+from .models import (
+    EsusuGroup,
+    FutureTenure, LiveTenure, HistoricalTenure
+)
 from .serializers import (
     EsusuGroupSerializer,
-    FutureTenureSerializer, LiveTenureSerializer
+    FutureTenureSerializer, LiveTenureSerializer, HistoricalTenureSerializer
 )
 from .permissions import IsGroupAdminOrReadOnly
 
@@ -82,3 +85,10 @@ class FutureTenureViewSet(viewsets.ReadOnlyModelViewSet):
 class LiveTenureViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = LiveTenure.objects.all()
     serializer_class = LiveTenureSerializer
+
+
+class HistoricalTenureViewSet(mixins.RetrieveModelMixin,
+                              viewsets.GenericViewSet
+                             ):
+    queryset = HistoricalTenure.objects.all()
+    serializer_class = HistoricalTenureSerializer

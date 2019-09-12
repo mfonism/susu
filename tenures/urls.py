@@ -7,6 +7,7 @@ router = DefaultRouter()
 router.register('groups', views.EsusuGroupViewSet, basename='esusugroup')
 router.register('future-tenures', views.FutureTenureViewSet, basename='futuretenure')
 router.register('live-tenures', views.LiveTenureViewSet, basename='livetenure')
+router.register('historical-tenures', views.HistoricalTenureViewSet, basename='historicaltenure')
 
 urlpatterns = [
     path('', include(router.urls)),

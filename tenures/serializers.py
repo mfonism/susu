@@ -2,7 +2,10 @@
 # from django.db.models.functions import Concat
 from rest_framework import serializers
 
-from .models import EsusuGroup, FutureTenure, LiveTenure
+from .models import (
+    EsusuGroup,
+    FutureTenure, LiveTenure, HistoricalTenure
+)
 
 
 class EsusuGroupSerializer(serializers.HyperlinkedModelSerializer):
@@ -19,7 +22,7 @@ class EsusuGroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = EsusuGroup
         fields = [
-            'url', 'name', 'hash_id', 'admin_name', 'admin_url',
+            'url', 'name', 'hash_id', 'admin_name', 'admin_url'
         ]
 
     # def __new__(cls, *args, **kwargs):
@@ -58,7 +61,7 @@ class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = FutureTenure
         fields = [
-            'url', 'amount', 'group', 'will_go_live_at', 'join_link',
+            'url', 'amount', 'group', 'will_go_live_at', 'join_link'
         ]
 
 
@@ -72,5 +75,20 @@ class LiveTenureSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = LiveTenure
         fields = [
-            'url', 'amount', 'group', 'live_at',
+            'url', 'amount', 'group', 'live_at'
+        ]
+
+
+class HistoricalTenureSerializer(serializers.HyperlinkedModelSerializer):
+
+    group = EsusuGroupSerializer(
+        source='esusu_group',
+        read_only=True
+    )
+    dissolved_at = serializers.ReadOnlyField(source='created_at')
+
+    class Meta:
+        model = HistoricalTenure
+        fields = [
+            'url', 'amount', 'group', 'dissolved_at'
         ]

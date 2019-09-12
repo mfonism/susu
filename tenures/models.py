@@ -70,10 +70,9 @@ class HistoricalTenure(AbstractShrewdModelMixin, models.Model):
         related_name='historical_tenures'
     )
     live_at = models.DateTimeField()
-    dissolved_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-dissolved_at', '-live_at']
+        ordering = ['-live_at']
 
 
 def two_weeks_from_now():
