@@ -104,7 +104,11 @@ class FutureTenure(AbstractShrewdModelMixin, models.Model):
         through_fields=('tenure', 'user'),
         related_name='+'
     )
-    esusu_group = models.OneToOneField(EsusuGroup, on_delete=models.CASCADE)
+    esusu_group = models.OneToOneField(
+        EsusuGroup,
+        on_delete=models.CASCADE,
+        related_name='future_tenure'
+    )
     will_go_live_at = models.DateTimeField(default=two_weeks_from_now)
 
     class Meta:
@@ -170,9 +174,10 @@ class Watch(AbstractShrewdModelMixin, models.Model):
         related_name='+'
     )
     has_opted_in = models.BooleanField(
-        default=False,
+        default=True,
         help_text='Indicates whether the user has opted to join the watched tenure when it eventually goes live'
     )
 
     class Meta:
         ordering = ['-created_at']
+        unique_together = ['tenure', 'user']

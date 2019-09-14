@@ -1,17 +1,31 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
+from django.db import IntegrityError
 from rest_framework import mixins, permissions, status, viewsets
-from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 from .models import (
     EsusuGroup,
-    FutureTenure, LiveTenure, HistoricalTenure
+    FutureTenure, LiveTenure, HistoricalTenure,
+    Watch,
 )
 from .serializers import (
     EsusuGroupSerializer,
-    FutureTenureSerializer, LiveTenureSerializer, HistoricalTenureSerializer
+    FutureTenureSerializer, LiveTenureSerializer, HistoricalTenureSerializer,
+    WatchSerializer
 )
 from .permissions import IsGroupAdminOrReadOnly, IsGroupMember
+
+
+def make_generic_400_response():
+    '''
+    Return a generic response to bad request.
+    '''
+    return Response(
+        {'error': 'Bad Request (400)'},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 class EsusuGroupViewSet(viewsets.ModelViewSet):
@@ -92,6 +106,30 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
             context={'request': request}
         )
 
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    @action(methods=['post'], detail=True,
+            url_path='watch', url_name='watch',
+            permission_classes=[permissions.IsAuthenticated])
+    def watch(self, request, pk=None):
+        '''
+        Create a watch for the currently logged in user on (the future
+        tenure of) the esusu group identified by this view.
+        '''
+        group = self.get_object()
+
+        try:
+            watch = Watch.objects.create(
+                user=request.user, tenure=group.future_tenure
+            )
+        except (IntegrityError, ObjectDoesNotExist):
+            return make_generic_400_response()
+
+        serializer = WatchSerializer(
+            watch,
+            context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

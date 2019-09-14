@@ -4,7 +4,8 @@ from rest_framework import serializers
 
 from .models import (
     EsusuGroup,
-    FutureTenure, LiveTenure, HistoricalTenure
+    FutureTenure, LiveTenure, HistoricalTenure,
+    Watch,
 )
 
 
@@ -91,4 +92,21 @@ class HistoricalTenureSerializer(serializers.HyperlinkedModelSerializer):
         model = HistoricalTenure
         fields = [
             'url', 'amount', 'group', 'dissolved_at'
+        ]
+
+
+class WatchSerializer(serializers.HyperlinkedModelSerializer):
+
+    user_name = serializers.StringRelatedField(source='user')
+    tenure_url = serializers.HyperlinkedRelatedField(
+        source='tenure',
+        read_only=True,
+        view_name='livetenure-detail'
+    )
+    opt_in = serializers.BooleanField(required=False, source='has_opted_in')
+
+    class Meta:
+        model = Watch
+        fields = [
+            'user_name', 'tenure_url', 'opt_in',
         ]
