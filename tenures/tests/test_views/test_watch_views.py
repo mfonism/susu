@@ -36,6 +36,9 @@ class WatchCreateAPITest(APITestCase):
         )
 
     def test_create_watch(self):
+        '''
+        Watchelina can create watch on Mfon's group/ft.
+        '''
         self.client.force_authenticate(self.watchelina)
         response = self.client.post(
             self.url,
@@ -61,6 +64,9 @@ class WatchCreateAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_cannot_create_watch_on_group_user_is_already_watching(self):
+        '''
+        Watchelina cannot create a second watch on Mfon's group.
+        '''
         self.client.force_authenticate(self.watchelina)
         self.client.post(
             self.url,
@@ -77,6 +83,10 @@ class WatchCreateAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_cannot_create_watch_on_group_with_no_ft(self):
+        '''
+        Mfon's new group does not have a future tenure.
+        Watchelina cannot create watch on this new group.
+        '''
         eg = EsusuGroup.objects.create(
             name='Has no FT!', admin=self.mfon
         )
@@ -139,6 +149,9 @@ class WatchListAPITest(APITestCase):
         )
 
     def test_list_watches(self):
+        '''
+        Mfon can list watches on the group he administers.
+        '''
         self.client.force_authenticate(self.mfon)
         response = self.client.get(self.url)
 
@@ -156,6 +169,10 @@ class WatchListAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_cannot_list_watches_not_belonging_to_group_identified_by_view(self):
+        '''
+        Mfon cannot list watches belonging to a group
+        other than the group he can currently access from this view.
+        '''
         ambrose = get_user_model().objects.create_user(
             email='ambrose@igibo.com', password='nopassword',
             first_name='Ambrose', last_name='Igibo'
@@ -180,6 +197,10 @@ class WatchListAPITest(APITestCase):
         self.assertEqual(len(response.data), 3)
 
     def test_cannot_list_watches_if_not_admin_of_group_identified_by_view(self):
+        '''
+        Watchelina cannot list watches belonging to the group
+        identified in this view because Mfon is the admin of that group.
+        '''
         self.client.force_authenticate(self.watchelina)
         response = self.client.get(self.url)
 
@@ -222,6 +243,9 @@ class WatchRetrieveAPITest(APITestCase):
         self.url = reverse('watch-detail', kwargs={'pk':self.ww.pk})
 
     def test_retreive_watch(self):
+        '''
+        Watchelina can retrieve her watch on Mfon's group.
+        '''
         self.client.force_authenticate(self.watchelina)
 
         response = self.client.get(self.url)
@@ -238,7 +262,95 @@ class WatchRetrieveAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_cannot_retrieve_someone_elses_watch(self):
+        '''
+        Mfon cannot retrieve Watchelina's watch.
+        '''
         self.client.force_authenticate(self.mfon)
 
         response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class WatchUpdateAPITest(APITestCase):
+    '''
+    User creates a group and becomes admin
+    Admin sets up a future tenure in group
+    User watches (future tenure in) group to receive updates
+    User updates watch to opt in or out of tenure when it goes live
+
+    PUT /api/watches/<int:pk>/
+    '''
+    def setUp(self):
+        self.mfon = get_user_model().objects.create_user(
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
+        )
+        eg = EsusuGroup.objects.create(
+            name='Lifelong Savers', admin=self.mfon
+        )
+        ft = FutureTenure.objects.create(
+            esusu_group=eg, amount=5000
+        )
+
+        # the watcher
+        self.watchelina = get_user_model().objects.create_user(
+            email='watchelina@aol.com', password='iWatchez',
+            first_name='Watchelina', last_name='Doe'
+        )
+
+        # in the API, the view should automatically create a watch for
+        # group admin on future tenure creation
+        Watch.objects.create(user=self.mfon, tenure=ft)
+
+        # the other watch
+        self.ww = Watch.objects.create(user=self.watchelina, tenure=ft)
+        self.url = reverse('watch-detail', kwargs={'pk':self.ww.pk})
+
+    def test_update_watch(self):
+        '''
+        Watchelina can update her watch on Mfon's group.
+        '''
+        self.client.force_authenticate(self.watchelina)
+        response = self.client.put(
+            self.url,
+            data=json.dumps({'opt_in': False}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unauthenticated_user_cannot_update_watch(self):
+        response = self.client.put(
+            self.url,
+            data=json.dumps({'opt_in': False}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_cannot_update_with_invalid_data(self):
+        '''
+        The opt_in field is not required,
+        But when present, it must be a boolean value.
+        '''
+        self.client.force_authenticate(self.watchelina)
+        response = self.client.put(
+            self.url,
+            data=json.dumps({'opt_in': None}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cannot_update_someone_elses_watch(self):
+        '''
+        Mfon is forbidden from updating Watchelina's watch.
+        '''
+        self.client.force_authenticate(self.mfon)
+        response = self.client.put(
+            self.url,
+            data=json.dumps({}),
+            content_type='application/json'
+        )
+
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

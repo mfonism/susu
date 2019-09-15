@@ -158,6 +158,7 @@ class HistoricalTenureViewSet(mixins.RetrieveModelMixin,
 
 
 class WatchViewSet(mixins.RetrieveModelMixin,
+                   mixins.UpdateModelMixin,
                    viewsets.GenericViewSet
                   ):
     queryset = Watch.objects.all()
