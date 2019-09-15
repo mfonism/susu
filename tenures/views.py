@@ -159,8 +159,12 @@ class HistoricalTenureViewSet(mixins.RetrieveModelMixin,
 
 class WatchViewSet(mixins.RetrieveModelMixin,
                    mixins.UpdateModelMixin,
+                   mixins.DestroyModelMixin,
                    viewsets.GenericViewSet
                   ):
     queryset = Watch.objects.all()
     serializer_class = WatchSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwner]
+
+    def perform_destroy(self, instance):
+        instance.delete(hard=True)
