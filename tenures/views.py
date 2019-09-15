@@ -5,6 +5,7 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
+from esusu import utils
 from .models import (
     EsusuGroup,
     FutureTenure, LiveTenure, HistoricalTenure,
@@ -16,16 +17,6 @@ from .serializers import (
     WatchSerializer
 )
 from .permissions import IsGroupAdminOrReadOnly, IsGroupMember
-
-
-def make_generic_400_response():
-    '''
-    Return a generic response to bad request.
-    '''
-    return Response(
-        {'error': 'Bad Request (400)'},
-        status=status.HTTP_400_BAD_REQUEST
-    )
 
 
 class EsusuGroupViewSet(viewsets.ModelViewSet):
@@ -109,28 +100,44 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-    @action(methods=['post'], detail=True,
+    @action(methods=['post', 'get'], detail=True,
             url_path='watch', url_name='watch',
             permission_classes=[permissions.IsAuthenticated])
     def watch(self, request, pk=None):
         '''
-        Create a watch for the currently logged in user on (the future
-        tenure of) the esusu group identified by this view.
+        Create and List actions for the watch model
         '''
         group = self.get_object()
 
-        try:
-            watch = Watch.objects.create(
-                user=request.user, tenure=group.future_tenure
-            )
-        except (IntegrityError, ObjectDoesNotExist):
-            return make_generic_400_response()
+        if request.method == 'POST':
+            # Create a watch for the currently logged in user on (the
+            # future tenure of) the esusu group identified by this view.
+            try:
+                watch = Watch.objects.create(
+                    user=request.user, tenure=group.future_tenure
+                )
+            except (IntegrityError, ObjectDoesNotExist):
+                return utils.make_generic_400_response()
 
-        serializer = WatchSerializer(
-            watch,
-            context={'request': request}
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            serializer = WatchSerializer(
+                watch,
+                context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        elif request.method == 'GET':
+            # List the watch objects on (the future tenure of) the esusu
+            # group identified by this view if authenticated user is
+            # the admin of the so identified group
+            if not group.admin == request.user:
+                return utils.make_generic_403_response()
+
+            serializer = WatchSerializer(
+                Watch.objects.filter(tenure__esusu_group=group),
+                many=True,
+                context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FutureTenureViewSet(viewsets.ReadOnlyModelViewSet):
