@@ -16,7 +16,7 @@ from .serializers import (
     FutureTenureSerializer, LiveTenureSerializer, HistoricalTenureSerializer,
     WatchSerializer
 )
-from .permissions import IsGroupAdminOrReadOnly, IsGroupMember
+from .permissions import IsGroupAdminOrReadOnly, IsGroupMember, IsOwner
 
 
 class EsusuGroupViewSet(viewsets.ModelViewSet):
@@ -155,3 +155,11 @@ class HistoricalTenureViewSet(mixins.RetrieveModelMixin,
                              ):
     queryset = HistoricalTenure.objects.all()
     serializer_class = HistoricalTenureSerializer
+
+
+class WatchViewSet(mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet
+                  ):
+    queryset = Watch.objects.all()
+    serializer_class = WatchSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwner]

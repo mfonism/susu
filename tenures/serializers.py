@@ -101,12 +101,12 @@ class WatchSerializer(serializers.HyperlinkedModelSerializer):
     tenure_url = serializers.HyperlinkedRelatedField(
         source='tenure',
         read_only=True,
-        view_name='livetenure-detail'
+        view_name='futuretenure-detail'
     )
     opt_in = serializers.BooleanField(required=False, source='has_opted_in')
 
     class Meta:
         model = Watch
         fields = [
-            'user_name', 'tenure_url', 'opt_in',
+            'url', 'user_name', 'tenure_url', 'opt_in',
         ]

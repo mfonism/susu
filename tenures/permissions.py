@@ -11,3 +11,8 @@ class IsGroupAdminOrReadOnly(permissions.BasePermission):
 class IsGroupMember(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.has_member(request.user)
+
+
+class IsOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.user

@@ -184,3 +184,61 @@ class WatchListAPITest(APITestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class WatchRetrieveAPITest(APITestCase):
+    '''
+    User creates a group and becomes admin
+    Admin sets up a future tenure in group
+    User watches (future tenure in) group to receive updates
+    User retrieves their watch
+
+    GET  /api/watches/<int:pk>/
+    '''
+    def setUp(self):
+        self.mfon = get_user_model().objects.create_user(
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
+        )
+        eg = EsusuGroup.objects.create(
+            name='Lifelong Savers', admin=self.mfon
+        )
+        ft = FutureTenure.objects.create(
+            esusu_group=eg, amount=5000
+        )
+
+        # the watcher
+        self.watchelina = get_user_model().objects.create_user(
+            email='watchelina@aol.com', password='iWatchez',
+            first_name='Watchelina', last_name='Doe'
+        )
+
+        # in the API, the view should automatically create a watch for
+        # group admin on future tenure creation
+        Watch.objects.create(user=self.mfon, tenure=ft)
+
+        # the other watch
+        self.ww = Watch.objects.create(user=self.watchelina, tenure=ft)
+        self.url = reverse('watch-detail', kwargs={'pk':self.ww.pk})
+
+    def test_retreive_watch(self):
+        self.client.force_authenticate(self.watchelina)
+
+        response = self.client.get(self.url)
+        serializer = WatchSerializer(
+            self.ww,
+            context={'request': APIRequestFactory().get(self.url)}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_unauthenticated_user_cannot_retrieve_watch(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_cannot_retrieve_someone_elses_watch(self):
+        self.client.force_authenticate(self.mfon)
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
