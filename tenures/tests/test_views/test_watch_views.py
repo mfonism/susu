@@ -313,7 +313,7 @@ class WatchUpdateAPITest(APITestCase):
         self.client.force_authenticate(self.watchelina)
         response = self.client.put(
             self.url,
-            data=json.dumps({'opt_in': False}),
+            data=json.dumps({'status': Watch.OPTED_IN}),
             content_type='application/json'
         )
 
@@ -322,7 +322,7 @@ class WatchUpdateAPITest(APITestCase):
     def test_unauthenticated_user_cannot_update_watch(self):
         response = self.client.put(
             self.url,
-            data=json.dumps({'opt_in': False}),
+            data=json.dumps({'status': Watch.OPTED_IN}),
             content_type='application/json'
         )
 
@@ -330,13 +330,13 @@ class WatchUpdateAPITest(APITestCase):
 
     def test_cannot_update_with_invalid_data(self):
         '''
-        The opt_in field is not required,
-        But when present, it must be a boolean value.
+        The status field is not required,
+        But when present, it must be the right thing.
         '''
         self.client.force_authenticate(self.watchelina)
         response = self.client.put(
             self.url,
-            data=json.dumps({'opt_in': None}),
+            data=json.dumps({'status': 'invalid status'}),
             content_type='application/json'
         )
 
@@ -361,7 +361,7 @@ class WatchDeleteAPITest(APITestCase):
     User creates a group and becomes admin
     Admin sets up a future tenure in group
     User watches (future tenure in) group to receive updates
-    User updates watch to opt in or out of tenure when it goes live
+    User deletes their watch on a future tenure
 
     DELETE /api/watches/<int:pk>/
     '''

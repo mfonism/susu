@@ -1,7 +1,9 @@
 # from django.db.models import Value, QuerySet
 # from django.db.models.functions import Concat
+from django.utils import timezone
 from rest_framework import serializers
 
+from . import tasks
 from .models import (
     EsusuGroup,
     FutureTenure, LiveTenure, HistoricalTenure,
@@ -53,17 +55,24 @@ class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
         source='esusu_group',
         read_only=True
     )
-    join_link = serializers.CharField(
-        # for now, let it just be the hash_id
-        source='esusu_group.hash_id',
-        read_only=True
-    )
 
     class Meta:
         model = FutureTenure
         fields = [
-            'url', 'amount', 'group', 'will_go_live_at', 'join_link'
+            'url', 'amount', 'group', 'will_go_live_at',
         ]
+
+    def update(self, instance, validated_data):
+        '''
+        Watchers should review updates on this ft, and should be
+        given enough time (at least 48 hours) to review the updates.
+        '''
+        tasks.reset_watches_on_updated_future_tenure(instance)
+        validated_data['will_go_live_at'] = max(
+            validated_data.get('will_go_live_at', instance.will_go_live_at),
+            timezone.now() + timezone.timedelta(2)
+        )
+        return super().update(instance, validated_data)
 
 
 class LiveTenureSerializer(serializers.HyperlinkedModelSerializer):
@@ -103,10 +112,9 @@ class WatchSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True,
         view_name='futuretenure-detail'
     )
-    opt_in = serializers.BooleanField(required=False, source='has_opted_in')
 
     class Meta:
         model = Watch
         fields = [
-            'url', 'user_name', 'tenure_url', 'opt_in',
+            'url', 'user_name', 'tenure_url', 'status',
         ]

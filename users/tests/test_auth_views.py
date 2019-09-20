@@ -10,7 +10,7 @@ from rest_framework.test import APITestCase
 from ..models import User
 
 
-@override_settings(AUTH_USER_MODEL='User')
+@override_settings(AUTH_USER_MODEL='users.User')
 class CreateUserTest(APITestCase):
     '''
     Test `POST`ing new user data to API.
@@ -65,7 +65,7 @@ class CreateUserTest(APITestCase):
         self.assertEqual(User.objects.count(), 0)
 
 
-@override_settings(AUTH_USER_MODEL='User')
+@override_settings(AUTH_USER_MODEL='users.User')
 class RetrieveAuthenticatedUserTest(APITestCase):
     '''
     Test `GET`ing the authenticated user.
@@ -95,7 +95,7 @@ class RetrieveAuthenticatedUserTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-@override_settings(AUTH_USER_MODEL='User')
+@override_settings(AUTH_USER_MODEL='users.User')
 class UpdateAuthenticatedUserTest(APITestCase):
     '''
     Test `PUT`ing at authenticated user's uri.
@@ -148,7 +148,7 @@ class UpdateAuthenticatedUserTest(APITestCase):
         pass
 
 
-@override_settings(AUTH_USER_MODEL='User')
+@override_settings(AUTH_USER_MODEL='users.User')
 class DeleteAuthenticatedUserTest(APITestCase):
     '''
     Test `DELETE`ing currently authenticated user.

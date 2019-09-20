@@ -8,7 +8,6 @@ from shrewd_models.models import AbstractShrewdModelMixin
 
 hasher = Hashids(min_length=11)
 
-
 class EsusuGroup(AbstractShrewdModelMixin, models.Model):
     name = models.CharField(max_length=64)
     hash_id = models.CharField(max_length=64, editable=False)
@@ -163,6 +162,15 @@ class Watch(AbstractShrewdModelMixin, models.Model):
     Intermediary model implementing the relationship between 
     users and the future tenures they are keeping their eyes on.
     '''
+    OPTED_IN = 'Opted In'
+    JUST_WATCHING = 'Just Watching'
+    TO_REVIEW_UPDATE = 'To Review Update'
+
+    STATUS_OPTIONS = (
+        (JUST_WATCHING, JUST_WATCHING),
+        (OPTED_IN, OPTED_IN),
+        (TO_REVIEW_UPDATE, TO_REVIEW_UPDATE)
+    )
     tenure = models.ForeignKey(
         FutureTenure,
         on_delete=models.CASCADE,
@@ -173,8 +181,11 @@ class Watch(AbstractShrewdModelMixin, models.Model):
         on_delete=models.PROTECT,
         related_name='+'
     )
-    has_opted_in = models.BooleanField(
-        default=True,
+    status = models.CharField(
+        blank=True,
+        default=JUST_WATCHING,
+        max_length=16,
+        choices=STATUS_OPTIONS,
         help_text='Indicates whether the user has opted to join the watched tenure when it eventually goes live'
     )
 

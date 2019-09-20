@@ -35,15 +35,6 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
     def future_tenure(self, request, pk=None):
         '''
         Write-actions for future tenures from their respective groups.
-
-        These actions are performed in the group view to solidify
-        the following notion:
-            + a group has one unique future tenure
-            + a future tenure belongs to one unique group
-            + a future tenure is created on a group
-
-        This implementation also makes it easy to enforce that only
-        the owner of a group can write to the group's future tenure.
         '''
         group = self.get_object()
 
