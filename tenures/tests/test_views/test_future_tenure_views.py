@@ -86,6 +86,25 @@ class FutureTenureCreateAPITest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_cannot_create_ft_on_group_with_existing_ft(self):
+        '''
+        Mfon cannot create two fts on the same group.
+        '''
+        self.client.force_authenticate(self.mfon)
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class FutureTenureListAPITest(APITestCase):
     '''

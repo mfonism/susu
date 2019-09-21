@@ -67,6 +67,17 @@ class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
             'url', 'amount', 'group', 'will_go_live_at', 'join_link'
         ]
 
+    def create(self, validated_data):
+        '''
+        Ensure that there's enough time (at least 48 hours) to go live.
+        '''
+        if validated_data.get('will_go_live_at'):
+            validated_data['will_go_live_at'] = max(
+                validated_data['will_go_live_at'],
+                timezone.now() + timezone.timedelta(2)
+            )
+        return super().create(validated_data)
+
     def update(self, instance, validated_data):
         '''
         Watchers should review updates on this ft, and should be

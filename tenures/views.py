@@ -39,6 +39,7 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
 
         if request.method == 'POST':
+
             serializer = FutureTenureSerializer(
                 data=request.data,
                 context={'request': request}
@@ -47,7 +48,11 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
             if not serializer.is_valid():
                 return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-            serializer.save(esusu_group=group)
+            try:
+                serializer.save(esusu_group=group)
+            except IntegrityError:
+                return utils.make_generic_400_response()
+
             return Response(serializer.data, status.HTTP_200_OK)
 
         elif request.method == 'PUT':
