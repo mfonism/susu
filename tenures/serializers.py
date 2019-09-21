@@ -55,11 +55,16 @@ class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
         source='esusu_group',
         read_only=True
     )
+    join_link = serializers.HyperlinkedRelatedField(
+        source='esusu_group',
+        read_only=True,
+        view_name='esusugroup-watch'
+    )
 
     class Meta:
         model = FutureTenure
         fields = [
-            'url', 'amount', 'group', 'will_go_live_at',
+            'url', 'amount', 'group', 'will_go_live_at', 'join_link'
         ]
 
     def update(self, instance, validated_data):
