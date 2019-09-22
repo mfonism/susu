@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from rest_framework.test import APITestCase, APIRequestFactory
+# from django_dramatiq.test import DramatiqTestCase
+from rest_framework.test import APITestCase, APIRequestFactory #, APIClient
 from rest_framework.reverse import reverse
 
+from ... import tasks
 from ...models import EsusuGroup, FutureTenure, Watch
 from ...serializers import FutureTenureSerializer
 
@@ -32,7 +34,10 @@ class FutureTenureSerializerCreateTest(APITestCase):
         self.assertTrue(serializer.is_valid())
         instance = serializer.save(esusu_group=self.group)
         
-        self.assertEqual(instance.will_go_live_at, timezone.now() + timezone.timedelta(14))
+        self.assertEqual(
+            instance.will_go_live_at.date(),
+            (timezone.now() + timezone.timedelta(14)).date()
+        )
 
     def test_create_ft_with_short_live_time(self):
         '''
@@ -52,7 +57,10 @@ class FutureTenureSerializerCreateTest(APITestCase):
         self.assertTrue(serializer.is_valid())
         instance = serializer.save(esusu_group=self.group)
         
-        self.assertEqual(instance.will_go_live_at, timezone.now() + timezone.timedelta(2))
+        self.assertEqual(
+            instance.will_go_live_at.date(),
+            (timezone.now() + timezone.timedelta(2)).date()
+            )
 
     def test_create_ft_with_fair_live_time(self):
         '''
@@ -72,10 +80,16 @@ class FutureTenureSerializerCreateTest(APITestCase):
         self.assertTrue(serializer.is_valid())
         instance = serializer.save(esusu_group=self.group)
         
-        self.assertEqual(instance.will_go_live_at, timezone.now() + timezone.timedelta(3))
+        self.assertEqual(
+            instance.will_go_live_at.date(),
+            (timezone.now() + timezone.timedelta(3)).date()
+        )
 
 
+# class FutureTenureSerializerUpdateTest(DramatiqTestCase):
+#    client_class = APIClient    # so that we can call self.client
 class FutureTenureSerializerUpdateTest(APITestCase):
+
     def setUp(self):
         self.mfon = get_user_model().objects.create_user(
             email='mfon@etimfon.com', password='4g8menut!',
@@ -133,6 +147,10 @@ class FutureTenureSerializerUpdateTest(APITestCase):
         self.assertTrue(serializer.is_valid())
         instance = serializer.save()
 
+        # wait for all the tasks to be processed
+        # self.broker.join(tasks.reset_watches_on_updated_future_tenure.queue_name)
+        # self.worker.join()
+
         for watch in Watch.objects.all():
             self.assertEqual(watch.status, Watch.TO_REVIEW_UPDATE)
 
@@ -155,7 +173,10 @@ class FutureTenureSerializerUpdateTest(APITestCase):
         self.assertTrue(serializer.is_valid())
         instance = serializer.save(esusu_group=self.group)
         
-        self.assertEqual(instance.will_go_live_at, timezone.now() + timezone.timedelta(2))
+        self.assertEqual(
+            instance.will_go_live_at.date(),
+            (timezone.now() + timezone.timedelta(2)).date()
+        )
 
     def test_create_ft_with_fair_live_time(self):
         '''
@@ -176,4 +197,7 @@ class FutureTenureSerializerUpdateTest(APITestCase):
         self.assertTrue(serializer.is_valid())
         instance = serializer.save(esusu_group=self.group)
         
-        self.assertEqual(instance.will_go_live_at, timezone.now() + timezone.timedelta(3))
+        self.assertEqual(
+            instance.will_go_live_at.date(),
+            (timezone.now() + timezone.timedelta(3)).date()
+        )

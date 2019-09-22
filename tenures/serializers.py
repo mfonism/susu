@@ -83,7 +83,8 @@ class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
         Watchers should review updates on this ft, and should be
         given enough time (at least 48 hours) to review the updates.
         '''
-        tasks.reset_watches_on_updated_future_tenure(instance)
+        # tasks.reset_watches_on_updated_future_tenure.send(instance.pk)
+        tasks.reset_watches_on_updated_future_tenure(instance.pk)
         validated_data['will_go_live_at'] = max(
             validated_data.get('will_go_live_at', instance.will_go_live_at),
             timezone.now() + timezone.timedelta(2)
