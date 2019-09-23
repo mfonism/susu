@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-# from django_dramatiq.test import DramatiqTestCase
-from rest_framework.test import APITestCase, APIRequestFactory #, APIClient
+from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework.reverse import reverse
 
 from ... import tasks
@@ -86,8 +85,6 @@ class FutureTenureSerializerCreateTest(APITestCase):
         )
 
 
-# class FutureTenureSerializerUpdateTest(DramatiqTestCase):
-#    client_class = APIClient    # so that we can call self.client
 class FutureTenureSerializerUpdateTest(APITestCase):
 
     def setUp(self):
@@ -146,10 +143,6 @@ class FutureTenureSerializerUpdateTest(APITestCase):
 
         self.assertTrue(serializer.is_valid())
         instance = serializer.save()
-
-        # wait for all the tasks to be processed
-        # self.broker.join(tasks.reset_watches_on_updated_future_tenure.queue_name)
-        # self.worker.join()
 
         for watch in Watch.objects.all():
             self.assertEqual(watch.status, Watch.TO_REVIEW_UPDATE)

@@ -32,10 +32,27 @@ class EsusuGroup(AbstractShrewdModelMixin, models.Model):
 
     def has_member(self, user):
         '''
-        return whether the argument user is a member of the group.
+        Return whether the argument user is a member of the group.
+
+        A user is a member of a group if they are either watching a future
+        tenure on the group, or are subscribed to a live tenure on it.
         '''
-        # for now
-        return True
+        return (user == self.admin
+            or self.has_watching_member(user)
+            or self.has_live_member(user)
+        )
+
+    def has_watching_member(self, user):
+        try:
+            return user in self.future_tenure.watchers
+        except:
+            return False
+
+    def has_live_member(self, user):
+        try:
+            return user in self.live_tenure.subscribers
+        except:
+            return False
 
 
 class LiveTenure(AbstractShrewdModelMixin, models.Model):

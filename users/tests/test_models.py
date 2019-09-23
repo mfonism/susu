@@ -24,3 +24,10 @@ class UserTest(TestCase):
     def test_str_user_with_no_names(self):
         u = User.objects.create_user(email='mfon@eti-mfon.com', password='4g8menut!')
         self.assertEqual(str(u), '<no firstname> <no lastname>')
+
+
+class UserMembershipTest(TestCase):
+    '''
+    Test all membership ...
+    '''
+    pass
