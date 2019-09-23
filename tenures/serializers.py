@@ -1,5 +1,3 @@
-# from django.db.models import Value, QuerySet
-# from django.db.models.functions import Concat
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -13,7 +11,6 @@ from .models import (
 
 class EsusuGroupSerializer(serializers.HyperlinkedModelSerializer):
 
-    # admin_name = serializers.ReadOnlyField()
     admin_name = serializers.StringRelatedField(source='admin')
     admin_url = serializers.HyperlinkedRelatedField(
         source='admin',
@@ -27,26 +24,6 @@ class EsusuGroupSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
             'url', 'name', 'hash_id', 'admin_name', 'admin_url'
         ]
-
-    # def __new__(cls, *args, **kwargs):
-    #     # this helps me create an annotation for fullname
-    #     # on the queryset operated upon by this serializer
-    #     if args and isinstance(args[0], QuerySet):
-    #         queryset = cls._build_queryset(args[0])
-    #         args = (queryset, ) + args[1:]
-    #     return super().__new__(cls, *args, **kwargs)
-
-    # @classmethod
-    # def _build_queryset(cls, queryset):
-    #     # just a helper I created
-    #     # not in the official interface of serializers
-    #     return queryset.annotate(
-    #         admin_name=Concat(
-    #             'admin__first_name',
-    #             Value(' '),
-    #             'admin__last_name'
-    #         )
-    #     )
 
 
 class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
@@ -83,7 +60,6 @@ class FutureTenureSerializer(serializers.HyperlinkedModelSerializer):
         Watchers should review updates on this ft, and should be
         given enough time (at least 48 hours) to review the updates.
         '''
-        # tasks.reset_watches_on_updated_future_tenure.send(instance.pk)
         tasks.reset_watches_on_updated_future_tenure(instance.pk)
         validated_data['will_go_live_at'] = max(
             validated_data.get('will_go_live_at', instance.will_go_live_at),

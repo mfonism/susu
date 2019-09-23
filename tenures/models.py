@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from hashids import Hashids
 
@@ -44,14 +45,14 @@ class EsusuGroup(AbstractShrewdModelMixin, models.Model):
 
     def has_watching_member(self, user):
         try:
-            return user in self.future_tenure.watchers
-        except:
+            return user in self.future_tenure.watchers.all()
+        except ObjectDoesNotExist:
             return False
 
     def has_live_member(self, user):
         try:
-            return user in self.live_tenure.subscribers
-        except:
+            return user in self.live_tenure.subscribers.all()
+        except ObjectDoesNotExist:
             return False
 
 
@@ -68,7 +69,11 @@ class LiveTenure(AbstractShrewdModelMixin, models.Model):
         through_fields=('tenure', 'user'),
         related_name='+'
     )
-    esusu_group = models.OneToOneField(EsusuGroup, on_delete=models.CASCADE)
+    esusu_group = models.OneToOneField(
+        EsusuGroup,
+        on_delete=models.CASCADE,
+        related_name='live_tenure'
+    )
     live_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
