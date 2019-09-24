@@ -1,3 +1,5 @@
+import random
+
 from .models import FutureTenure, LiveTenure, Watch, LiveSubscription
 
 
@@ -18,9 +20,12 @@ def promote_future_tenure(ft_pk):
     )
     # populate live tenure with live subscriptions created from
     # watches that have opted into promoted future tenure
-    for w in Watch.objects.filter(tenure=ft, status=Watch.OPTED_IN):
+    # creation of live subscriptions should be random
+    watches = list(Watch.objects.filter(tenure=ft, status=Watch.OPTED_IN))
+    random.shuffle(watches)
+    for watch in watches:
         LiveSubscription.objects.create(
-            tenure=lt, user=w.user
+            tenure=lt, user=watch.user
         )
 
     # delete future tenure
