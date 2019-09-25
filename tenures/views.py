@@ -9,14 +9,14 @@ from esusu import utils
 from .models import (
     EsusuGroup,
     FutureTenure, LiveTenure, HistoricalTenure,
-    Watch,
+    Watch, LiveSubscription
 )
 from .serializers import (
     EsusuGroupSerializer,
     FutureTenureSerializer, LiveTenureSerializer, HistoricalTenureSerializer,
-    WatchSerializer
+    WatchSerializer, LiveSubscriptionSerializer
 )
-from .permissions import IsGroupAdminOrReadOnly, IsGroupMember, IsOwner
+from .permissions import IsGroupAdminOrReadOnly, IsGroupMember, IsOwner, IsGroupAdmin
 
 
 class EsusuGroupViewSet(viewsets.ModelViewSet):
@@ -39,7 +39,7 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
 
         if request.method == 'POST':
-
+            # creating new future tenure
             serializer = FutureTenureSerializer(
                 data=request.data,
                 context={'request': request}
@@ -49,10 +49,13 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
                 return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
             try:
-                serializer.save(esusu_group=group)
+                ft = serializer.save(esusu_group=group)
             except IntegrityError:
                 return utils.make_generic_400_response()
 
+            # if all goes well, create watch on so created
+            # future tenure for admin
+            Watch.objects.create(tenure=ft, user=request.user)
             return Response(serializer.data, status.HTTP_200_OK)
 
         elif request.method == 'PUT':
@@ -92,7 +95,6 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
             many=True,
             context={'request': request}
         )
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -136,6 +138,23 @@ class EsusuGroupViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+    @action(methods=['get'], detail=True,
+            url_path='live-subscription', url_name='livesubscription',
+            permission_classes=[permissions.IsAuthenticated, IsGroupAdmin])
+    def live_subscription(self, request, pk=None):
+        '''
+        List live subscriptions from their respective groups.
+        '''
+        group = self.get_object()
+
+        serializer = LiveSubscriptionSerializer(
+            LiveSubscription.objects.filter(tenure__esusu_group=group),
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class FutureTenureViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FutureTenure.objects.all()
     serializer_class = FutureTenureSerializer
@@ -164,3 +183,11 @@ class WatchViewSet(mixins.RetrieveModelMixin,
 
     def perform_destroy(self, instance):
         instance.delete(hard=True)
+
+
+class LiveSubscriptionViewSet(mixins.RetrieveModelMixin,
+                              viewsets.GenericViewSet
+                              ):
+    queryset = LiveSubscription.objects.all()
+    serializer_class = LiveSubscriptionSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwner]

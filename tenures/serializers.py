@@ -5,7 +5,7 @@ from . import tasks
 from .models import (
     EsusuGroup,
     FutureTenure, LiveTenure, HistoricalTenure,
-    Watch,
+    Watch, LiveSubscription
 )
 
 
@@ -109,5 +109,21 @@ class WatchSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Watch
         fields = [
-            'url', 'user_name', 'tenure_url', 'status',
+            'url', 'user_name', 'tenure_url', 'status'
+        ]
+
+
+class LiveSubscriptionSerializer(serializers.HyperlinkedModelSerializer):
+
+    user_name = serializers.StringRelatedField(source='user')
+    tenure_url = serializers.HyperlinkedRelatedField(
+        source='tenure',
+        read_only=True,
+        view_name='livetenure-detail'
+    )
+
+    class Meta:
+        model = LiveSubscription
+        fields = [
+            'url', 'user_name', 'tenure_url'
         ]

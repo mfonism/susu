@@ -11,9 +11,9 @@ from ...serializers import WatchSerializer
 
 class WatchCreateAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    User watches (future tenure in) group to receive updates
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * User watches (future tenure in) group to receive updates
 
     POST  /api/groups/<int:pk>/watch/
     '''
@@ -104,10 +104,10 @@ class WatchCreateAPITest(APITestCase):
 
 class WatchListAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    Users watch (future tenure in) group to receive updates
-    Admin lists watches on the group
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * Users watch (future tenure in) group to receive updates
+    * Admin lists watches on the group
 
     GET  /api/groups/<int:pk>/watch/
     '''
@@ -209,10 +209,10 @@ class WatchListAPITest(APITestCase):
 
 class WatchRetrieveAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    User watches (future tenure in) group to receive updates
-    User retrieves their watch
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * User watches (future tenure in) group to receive updates
+    * User retrieves their watch
 
     GET  /api/watches/<int:pk>/
     '''
@@ -273,10 +273,10 @@ class WatchRetrieveAPITest(APITestCase):
 
 class WatchUpdateAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    User watches (future tenure in) group to receive updates
-    User updates watch to opt in or out of tenure when it goes live
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * User watches (future tenure in) group to receive updates
+    * User updates watch to opt in or out of tenure when it goes live
 
     PUT /api/watches/<int:pk>/
     '''
@@ -358,10 +358,10 @@ class WatchUpdateAPITest(APITestCase):
 
 class WatchDeleteAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    User watches (future tenure in) group to receive updates
-    User deletes their watch on a future tenure
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * User watches (future tenure in) group to receive updates
+    * User deletes their watch on a future tenure
 
     DELETE /api/watches/<int:pk>/
     '''

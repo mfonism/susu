@@ -6,14 +6,14 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase, APIRequestFactory
 
-from ...models import FutureTenure, EsusuGroup
+from ...models import FutureTenure, EsusuGroup, Watch
 from ...serializers import FutureTenureSerializer
 
 
 class FutureTenureCreateAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
 
     POST  /api/groups/<int:pk>/future-tenure/
     '''
@@ -46,6 +46,19 @@ class FutureTenureCreateAPITest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
+    def test_admin_automatically_gets_a_watch_on_ft_creation(self):
+        '''
+        Mfon automatically gets a watch on the ft he creates on his group.
+        '''
+        self.client.force_authenticate(self.mfon)
+        self.client.post(
+            self.url,
+            data=json.dumps(self.valid_payload),
+            content_type='application/json'
+        )
+
+        self.assertTrue(Watch.objects.filter(tenure=FutureTenure.objects.first(), user=self.mfon).exists())
 
     def test_unauthenticated_user_cannot_create_ft(self):
         response = self.client.post(
@@ -108,12 +121,11 @@ class FutureTenureCreateAPITest(APITestCase):
 
 class FutureTenureListAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    Repeat a number of times.
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * Repeat a definite number of times
 
-    User lists all future tenures available in app,
-    to find out which to watch/join.
+    * User lists all future tenures available in app, to find out which to watch/join
 
     GET  /api/future-tenures/
     '''
@@ -169,11 +181,11 @@ class FutureTenureListAPITest(APITestCase):
 
 class FutureTenureRetrieveAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    Repeat a number of times.
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * Repeat a definite number of times
 
-    User retrieves a single future tenure to possibly place a watch on it.
+    * User retrieves a single future tenure to possibly place a watch on it
 
     GET  /api/future-tenures/<hash_id:pk>/
     '''
@@ -215,9 +227,9 @@ class FutureTenureRetrieveAPITest(APITestCase):
 
 class FutureTenureUpdateAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    Admin updates future tenure from group
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * Admin updates future tenure from group
 
     PUT  /api/groups/<int:pk>/future-tenure/
     '''
@@ -317,9 +329,9 @@ class FutureTenureUpdateAPITest(APITestCase):
 
 class FutureTenureDeleteAPITest(APITestCase):
     '''
-    User creates a group and becomes admin
-    Admin sets up a future tenure in group
-    Admin deletes future tenure from group
+    * User creates a group and becomes admin
+    * Admin creates a future tenure in group
+    * Admin deletes future tenure from group
 
     DELETE  /api/groups/<int:pk>/future-tenure/
     '''
