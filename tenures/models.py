@@ -193,6 +193,7 @@ class Watch(AbstractShrewdModelMixin, models.Model):
         (OPTED_IN, OPTED_IN),
         (TO_REVIEW_UPDATE, TO_REVIEW_UPDATE)
     )
+
     tenure = models.ForeignKey(
         FutureTenure,
         on_delete=models.CASCADE,

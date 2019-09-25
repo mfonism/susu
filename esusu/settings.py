@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'tenures.apps.TenuresConfig',
     'shrewd_models.apps.ShrewdModelsConfig',
+    'payments.apps.PaymentsConfig',
 ]
 
 MIDDLEWARE = [
