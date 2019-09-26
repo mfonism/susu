@@ -152,7 +152,7 @@ class LiveSubscription(AbstractShrewdModelMixin, models.Model):
         on_delete=models.PROTECT,
         related_name='+'
     )
-    next_charge_at = models.DateTimeField(default=utils.seven_days_from_now)
+    next_charge_date = models.DateField(default=utils.seven_days_from_now)
     pay_date = models.DateField(null=True)
 
     def reset_next_charge_date(self):

@@ -219,9 +219,9 @@ class ContributionsCollectionTasksTest(TestCase):
 
         # the subscriptions on mfon's group's lt
         # to be charged today
-        LiveSubscription.objects.create(tenure=lt1, user=self.mfon, next_charge_at=timezone.now())
-        LiveSubscription.objects.create(tenure=lt1, user=subscriptus, next_charge_at=timezone.now())
-        LiveSubscription.objects.create(tenure=lt1, user=subscriptina, next_charge_at=timezone.now())
+        LiveSubscription.objects.create(tenure=lt1, user=self.mfon, next_charge_date=timezone.now().date())
+        LiveSubscription.objects.create(tenure=lt1, user=subscriptus, next_charge_date=timezone.now().date())
+        LiveSubscription.objects.create(tenure=lt1, user=subscriptina, next_charge_date=timezone.now().date())
 
         # the subscriptions on ambrose's group's lt
         # to be charged in seven days

@@ -48,7 +48,6 @@ def promote_future_tenure(ft_pk):
 
 def _collect_contribution_from_subscription(ls):
     '''
-    To be run as a weekly task.
     Charge the appropriate amount due weekly on the appropriate live tenure
     to the subscribed user, and create contribution object as a receipt of this.
     '''
@@ -62,7 +61,7 @@ def collect_due_weekly_contributions():
     '''
     Collect contributions that are due today.
     '''
-    qs = LiveSubscription.objects.filter(next_charge_at__date=timezone.now().date())
+    qs = LiveSubscription.objects.filter(next_charge_date=timezone.now().date())
     for lsub in qs:
         _collect_contribution_from_subscription(lsub)
 
