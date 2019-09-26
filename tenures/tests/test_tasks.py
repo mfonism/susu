@@ -121,6 +121,40 @@ class FutureTenureAndWatchRelatedTasksTest(TestCase):
         self.assertEqual(Watch.objects.filter(tenure=self.ft).count(), 0)
         self.assertEqual(Watch.all_objects.filter(tenure=self.ft).count(), 0)
 
+    def test_pay_dates_are_set_on_resulting_live_tenure(self):
+        '''
+        When a future tenure is promoted to a live tenure
+        previous pay date is set at today
+        next pay date is set for 30 days
+        '''
+        Watch.objects.filter(user=self.mfon).update(status=Watch.OPTED_IN)
+        Watch.objects.filter(user=self.watchson).update(status=Watch.OPTED_IN)
+        Watch.objects.filter(user=self.watchaholic).update(status=Watch.OPTED_IN)
+
+        tasks.promote_future_tenure(ft_pk=self.ft.pk)
+
+        lt = LiveTenure.objects.get(esusu_group=self.group)
+
+        self.assertEqual(lt.previous_pay_date, (timezone.now()).date())
+        self.assertEqual(lt.next_pay_date, (timezone.now() + timezone.timedelta(30)).date())
+
+    def test_increasing_pay_date_is_set_on_resulting_live_subscriptions(self):
+        '''
+        Resulting live subscriptions have their pay date set on them
+        Paydates are set thirty days apart
+        With the first live subscription taking on the next pay date of the live tenure.
+        '''
+        Watch.objects.filter(user=self.mfon).update(status=Watch.OPTED_IN)
+        Watch.objects.filter(user=self.watchson).update(status=Watch.OPTED_IN)
+        Watch.objects.filter(user=self.watchaholic).update(status=Watch.OPTED_IN)
+
+        tasks.promote_future_tenure(ft_pk=self.ft.pk)
+
+        pay_datetime = timezone.now()
+        for lsub in LiveSubscription.objects.filter(tenure__esusu_group=self.group):
+            pay_datetime = pay_datetime + timezone.timedelta(30)
+            self.assertEqual(lsub.pay_date, pay_datetime.date())
+
 
 class ContributionsCollectionTasksTest(TestCase):
     '''

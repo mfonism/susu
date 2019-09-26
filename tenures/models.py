@@ -75,6 +75,8 @@ class LiveTenure(AbstractShrewdModelMixin, models.Model):
         related_name='live_tenure'
     )
     live_at = models.DateTimeField(auto_now_add=True)
+    previous_pay_date = models.DateField(null=True)
+    next_pay_date = models.DateField(null=True)
 
     class Meta:
         ordering = ['-live_at', '-created_at']
@@ -151,6 +153,7 @@ class LiveSubscription(AbstractShrewdModelMixin, models.Model):
         related_name='+'
     )
     next_charge_at = models.DateTimeField(default=utils.seven_days_from_now)
+    pay_date = models.DateField(null=True)
 
     def reset_next_charge_date(self):
         self.next_charge_at = utils.seven_days_from_now()

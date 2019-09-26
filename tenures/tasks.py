@@ -22,17 +22,23 @@ def promote_future_tenure(ft_pk):
     ft = FutureTenure.objects.get(pk=ft_pk)
 
     # create live tenure
+    now = timezone.now()
     lt = LiveTenure.objects.create(
-        amount=ft.amount, esusu_group=ft.esusu_group
+        amount=ft.amount, esusu_group=ft.esusu_group,
+        previous_pay_date=now.date(),
+        next_pay_date=(now + timezone.timedelta(30)).date()
     )
     # populate live tenure with live subscriptions created from
     # watches that have opted into promoted future tenure
     # creation of live subscriptions should be random
     watches = list(Watch.objects.filter(tenure=ft, status=Watch.OPTED_IN))
     random.shuffle(watches)
+    # and pay dates should be 30 days from each other
+    pay_at = now
     for watch in watches:
+        pay_at += timezone.timedelta(30)
         LiveSubscription.objects.create(
-            tenure=lt, user=watch.user
+            tenure=lt, user=watch.user, pay_date=pay_at.date()
         )
 
     # delete future tenure
