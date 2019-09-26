@@ -1,16 +1,26 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
+from hashids import Hashids
 
 from .. import tasks
 from ..models import (
     EsusuGroup,
     FutureTenure, LiveTenure,
-    Watch, LiveSubscription
+    Watch, LiveSubscription,
+    Contribution
 )
+from payments.models import Processor
 
 
-class TasksTest(TestCase):
+class FutureTenureAndWatchRelatedTasksTest(TestCase):
+    '''
+    Tests for tasks related to future tenures and watches.
 
+    Especially tasks that have to do with promoting future tenures
+    to live tenures,
+    and their respective watches to live subscriptions.
+    '''
     def setUp(self):
         self.mfon = get_user_model().objects.create_user(
             email='mfon@etimfon.com', password='4g8menut!',
@@ -110,3 +120,95 @@ class TasksTest(TestCase):
         # after promotion: 0 watches
         self.assertEqual(Watch.objects.filter(tenure=self.ft).count(), 0)
         self.assertEqual(Watch.all_objects.filter(tenure=self.ft).count(), 0)
+
+
+class ContributionsCollectionTasksTest(TestCase):
+    '''
+    Test the collection of weekly due contributions.
+
+    Contributions are charged to users subscribed whose subscriptions'
+    next charge date fall on the day of running the collecting task.
+
+    NOTE: Each subscribing User needs a processor instance
+    for all these to happen.
+    '''
+    def setUp(self):
+        # mfon, his group, his lt
+        self.mfon = get_user_model().objects.create_user(
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
+        )
+        Processor.objects.create(
+            user=self.mfon, card_type=Processor.MASTER_CARD,
+            card_id=Hashids(min_length=32).encode(self.mfon.pk),
+        )
+        group1 = EsusuGroup.objects.create(
+            name='Lifelong Savers', admin=self.mfon
+        )
+        lt1 = LiveTenure.objects.create(
+            amount=5000, esusu_group=group1
+        )
+
+        # ambrose, his group, his lt
+        ambrose = get_user_model().objects.create_user(
+            email='ambrose@igibo.com', password='nopassword',
+            first_name='Ambrose', last_name='Igibo'
+        )
+        Processor.objects.create(
+            user=ambrose, card_type=Processor.VERVE,
+            card_id=Hashids(min_length=32).encode(ambrose.pk),
+        )
+        group2 = EsusuGroup.objects.create(
+            name='Save for School', admin=ambrose
+        )
+        lt2 = LiveTenure.objects.create(
+            amount=5000, esusu_group=group2
+        )
+
+        # the subscribers
+        subscriptus = get_user_model().objects.create_user(
+            email='watchelina@aol.com', password='iWatchez',
+            first_name='Watchelina', last_name='Doe'
+        )
+        Processor.objects.create(
+            user=subscriptus, card_type=Processor.VISA,
+            card_id=Hashids(min_length=32).encode(subscriptus.pk),
+        )
+        subscriptina = get_user_model().objects.create_user(
+            email='watchson@gmail.com', password='iAlsoWatcheeze',
+            first_name='Watchson', last_name='Johnson'
+        )
+        Processor.objects.create(
+            user=subscriptina, card_type=Processor.INTERSWITCH,
+            card_id=Hashids(min_length=32).encode(subscriptina.pk),
+        )
+
+        # the subscriptions on mfon's group's lt
+        # to be charged today
+        LiveSubscription.objects.create(tenure=lt1, user=self.mfon, next_charge_at=timezone.now())
+        LiveSubscription.objects.create(tenure=lt1, user=subscriptus, next_charge_at=timezone.now())
+        LiveSubscription.objects.create(tenure=lt1, user=subscriptina, next_charge_at=timezone.now())
+
+        # the subscriptions on ambrose's group's lt
+        # to be charged in seven days
+        LiveSubscription.objects.create(tenure=lt2, user=ambrose)
+        LiveSubscription.objects.create(tenure=lt2, user=self.mfon)
+
+    def test_collect_due_contributions(self):
+        '''
+        Three live subscriptions are due for collection today.
+        Three contribution ojects are created after collection.
+        '''
+        self.assertEqual(Contribution.objects.count(), 0)
+
+        tasks.collect_due_contributions()
+
+        self.assertEqual(Contribution.objects.count(), 3)
+
+    def test_contributions_are_created_only_for_due_subscriptions(self):
+        mfons_lt = LiveTenure.objects.get(esusu_group__admin=self.mfon)
+
+        tasks.collect_due_contributions()
+
+        for contribution in Contribution.objects.all():
+            self.assertEqual(contribution.tenure, mfons_lt)

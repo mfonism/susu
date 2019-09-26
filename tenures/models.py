@@ -1,9 +1,9 @@
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils import timezone
 from hashids import Hashids
 
+from . import utils
 from shrewd_models.models import AbstractShrewdModelMixin
 
 
@@ -103,10 +103,6 @@ class HistoricalTenure(AbstractShrewdModelMixin, models.Model):
         ordering = ['-live_at']
 
 
-def two_weeks_from_now():
-    return timezone.now() + timezone.timedelta(14)
-
-
 class FutureTenure(AbstractShrewdModelMixin, models.Model):
     # the hash_id will be passed from the group to the tenure
     hash_id = models.CharField(
@@ -130,7 +126,7 @@ class FutureTenure(AbstractShrewdModelMixin, models.Model):
         on_delete=models.CASCADE,
         related_name='future_tenure'
     )
-    will_go_live_at = models.DateTimeField(default=two_weeks_from_now)
+    will_go_live_at = models.DateTimeField(default=utils.two_weeks_from_now)
 
     class Meta:
         ordering = ['-will_go_live_at', '-created_at']
@@ -154,6 +150,11 @@ class LiveSubscription(AbstractShrewdModelMixin, models.Model):
         on_delete=models.PROTECT,
         related_name='+'
     )
+    next_charge_at = models.DateTimeField(default=utils.seven_days_from_now)
+
+    def reset_next_charge_date(self):
+        self.next_charge_at = utils.seven_days_from_now()
+        self.save()
 
     class Meta:
         ordering = ['-created_at']
@@ -215,3 +216,25 @@ class Watch(AbstractShrewdModelMixin, models.Model):
     class Meta:
         ordering = ['-created_at']
         unique_together = ['tenure', 'user']
+
+
+class Contribution(AbstractShrewdModelMixin, models.Model):
+    '''
+    Model implementing a weekly contribution of an amount to a live tenure.
+    '''
+    amount = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        help_text='The amount of money on this contribution.',
+        editable=False
+    )
+    tenure = models.ForeignKey(
+        LiveTenure,
+        on_delete=models.PROTECT,
+        related_name='contributions'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='+'
+    )

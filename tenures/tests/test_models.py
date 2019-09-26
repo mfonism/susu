@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from tenures.models import (
     EsusuGroup,
@@ -104,3 +105,23 @@ class FutureTenureTest(TestCase):
         Assert that future tenure takes on the hash id of its owning group.
         '''
         self.assertEqual(self.ft.hash_id, self.eg.hash_id)
+
+
+class LiveSubscriptionTest(TestCase):
+
+    def setUp(self):
+        mfon = get_user_model().objects.create_user(
+            email='mfon@etimfon.com', password='4g8menut!',
+            first_name='Mfon', last_name='Eti-mfon'
+        )
+        group = EsusuGroup.objects.create(name='Lifelong Savers', admin=mfon)
+        lt = LiveTenure.objects.create(esusu_group=group, amount=5000)
+        self.ls = LiveSubscription.objects.create(user=mfon, tenure=lt)
+        self.ls.next_charge_at = timezone.now() - timezone.timedelta(3)
+        self.ls.save()
+
+    def test_reset_next_charge_date(self):
+        self.assertNotEqual(self.ls.next_charge_at, timezone.now() + timezone.timedelta(7))
+        self.ls.reset_next_charge_date()
+        self.ls.refresh_from_db()
+        self.assertEqual(self.ls.next_charge_at, timezone.now() + timezone.timedelta(7))
